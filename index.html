@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebChat</title>
+    <!-- 引入 Firebase 库 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        #chat-box { width: 100%; max-width: 500px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 20px; height: 60vh; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px; border-radius: 8px; background: #e0f7fa; width: fit-content; max-width: 80%; }
+        .message.other { background: #f1f1f1; align-self: flex-end; }
+        .date-divider { text-align: center; font-size: 12px; color: #888; margin: 10px 0; }
+        .meta { font-size: 10px; color: #666; margin-bottom: 4px; }
+        #input-area { width: 100%; max-width: 500px; display: flex; gap: 10px; }
+        #user-name { width: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        #msg-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- 不知道取什么就叫简单的标题 -->
+    <h2>WebChat</h2>
+    
+    <div id="chat-box"></div>
+
+    <div id="input-area">
+        <input type="text" id="user-name" placeholder="名字" value="A">
+        <input type="text" id="msg-input" placeholder="输入你想说的话..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        // 这是为你修正后的干净配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
+            authDomain: "blabalaba-69dc2.firebaseapp.com",
+            databaseURL: "https://blabalaba-69dc2-default-rtdb.firebaseio.com",
+            projectId: "blabalaba-69dc2",
+            storageBucket: "blabalaba-69dc2.firebasestorage.app",
+            messagingSenderId: "393868557271",
+            appId: "1:393868557271:web:0b27791b67248bcf9de992"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let lastDate = "";
+
+        // 发送消息功能
+        function sendMessage() {
+            const name = document.getElementById('user-name').value;
+            const text = document.getElementById('msg-input').value;
+            if (!text.trim()) return;
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            // 将数据推送到 Firebase
+            db.ref('messages').push({ name, text, date: dateStr, time: timeStr });
+            document.getElementById('msg-input').value = ""; // 发送后清空输入框
+        }
+
+        // 监听回车键
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // 监听数据库变化并实时显示
+        db.ref('messages').on('child_added', snapshot => {
+            const data = snapshot.val();
+            const chatBox = document.getElementById('chat-box');
+
+            if (data.date !== lastDate) {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'date-divider';
+                dateDiv.innerText = `--- ${data.date} ---`;
+                chatBox.appendChild(dateDiv);
+                lastDate = data.date;
+            }
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message';
+            if (data.name !== document.getElementById('user-name').value) {
+                msgDiv.classList.add('other');
+            }
+
+            msgDiv.innerHTML = `<div class="meta">${data.name} ${data.time}</div>${data.text}`;
+            chatBox.appendChild(msgDiv);
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
