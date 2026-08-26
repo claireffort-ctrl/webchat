@@ -9,34 +9,42 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         /* 整体网页布局（左右分屏） */
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background-color: #f4f4f9; overflow: hidden; }
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
 
-        /* 左侧边栏 (暗黑风格) */
-        #sidebar { width: 250px; background-color: #202124; color: #e8eaed; display: flex; flex-direction: column; border-right: 1px solid #000; }
-        #sidebar h3 { padding: 20px; margin: 0; font-size: 14px; color: #9aa0a6; border-bottom: 1px solid #3c4043; font-weight: normal; }
+        /* 左侧边栏 (明亮清爽风格) */
+        #sidebar { width: 250px; background-color: #ffffff; color: #333; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
+        #sidebar h3 { padding: 20px; margin: 0; font-size: 15px; color: #555; border-bottom: 1px solid #eee; font-weight: bold; }
         #date-list { flex: 1; overflow-y: auto; }
-        .history-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #3c4043; transition: background 0.2s; font-size: 14px; }
-        .history-item:hover { background-color: #303134; }
-        .history-item.active { background-color: #414347; font-weight: bold; color: #8ab4f8; border-left: 4px solid #8ab4f8; padding-left: 16px; }
+        .history-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s; font-size: 14px; color: #444; }
+        .history-item:hover { background-color: #f9f9f9; }
+        .history-item.active { background-color: #e6f7ff; font-weight: bold; color: #1890ff; border-left: 4px solid #1890ff; padding-left: 16px; }
 
         /* 右侧主聊天区 */
         #main-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
         h2 { margin-top: 0; color: #333; }
 
         /* 聊天气泡显示区 */
-        #chat-box { width: 100%; max-width: 600px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 20px; flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .message { padding: 10px 14px; border-radius: 8px; background: #e0f7fa; width: fit-content; max-width: 80%; word-break: break-all; line-height: 1.5; }
-        .message.other { background: #f1f1f1; align-self: flex-end; }
-        .date-divider { text-align: center; font-size: 12px; color: #888; margin: 10px 0; }
-        .meta { font-size: 10px; color: #888; margin-bottom: 6px; }
+        #chat-box { width: 100%; max-width: 600px; background: #f0f2f5; padding: 20px; flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* 气泡通用样式 */
+        .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; }
+        .meta { font-size: 11px; color: #888; margin-bottom: 4px; }
+        
+        /* 别人的消息 (白色，靠左) */
+        .message.other { background: #ffffff; align-self: flex-start; border-top-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        /* 我的消息 (绿色，靠右) */
+        .message.mine { background: #d5f5e3; align-self: flex-end; border-top-right-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .message.mine .meta { text-align: right; } /* 我的名字在气泡内也靠右显示 */
+
+        .date-divider { text-align: center; font-size: 12px; color: #aaa; margin: 15px 0; }
 
         /* 底部输入区 */
-        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; }
-        #user-name { width: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
-        #msg-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
-        #msg-input:focus, #user-name:focus { border-color: #8ab4f8; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #0056b3; }
+        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        #user-name { width: 80px; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
+        #msg-input { flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
+        #msg-input:focus, #user-name:focus { border-color: #1890ff; background: white; }
+        button { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        button:hover { background: #096dd9; }
         button:disabled { background: #ccc; cursor: not-allowed; }
 
         /* 历史记录状态提示 */
@@ -49,20 +57,15 @@
     <div id="sidebar">
         <h3>Recents (聊天记录)</h3>
         <div id="date-list">
-            <!-- 第一个固定按钮：返回实时聊天 -->
             <div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()">🔴 返回最新聊天</div>
-            <!-- 下方将由代码自动生成曾经聊天的日期 -->
         </div>
     </div>
 
     <!-- 右侧主聊天区 -->
     <div id="main-area">
         <h2>blablaba</h2>
-        <!-- 看历史记录时的警告语 -->
         <div id="history-notice">当前处于「历史记录」模式，无法发送新消息。请点击左侧返回最新聊天。</div>
-        
         <div id="chat-box"></div>
-
         <div id="input-area">
             <input type="text" id="user-name" placeholder="你的名字">
             <input type="text" id="msg-input" placeholder="输入你想说的话..." onkeypress="handleEnter(event)">
@@ -71,7 +74,7 @@
     </div>
 
     <script>
-        // 已经填好你的真实密钥，无需修改
+        // 你的 Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
             authDomain: "blabalaba-69dc2.firebaseapp.com",
@@ -85,29 +88,30 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let lastDate = "";
-        let currentView = "live"; // 记录现在是直播模式还是历史模式
+        let currentView = "live"; 
 
-        // 页面打开时自动执行
         window.onload = function() {
-            // 恢复上次填写的名字
             const savedName = localStorage.getItem('chat_username');
             if (savedName) document.getElementById('user-name').value = savedName;
             
-            loadSidebarDates();
+            // 稍微延迟一点点加载侧边栏，确保数据库连接完毕
+            setTimeout(() => {
+                loadSidebarDates();
+            }, 500);
+            
             loadLiveChat();
         };
 
-        // 核心功能1：抓取所有聊过天的日期，生成侧边栏菜单
         function loadSidebarDates() {
-            db.ref('messages').once('value', snapshot => {
-                const dates = new Set(); // 使用 Set 来自动去除重复的日期
+            db.ref('messages').once('value').then(snapshot => {
+                const dates = new Set(); 
                 snapshot.forEach(child => {
                     const data = child.val();
                     if(data.date) dates.add(data.date);
                 });
 
                 const dateListDiv = document.getElementById('date-list');
-                const sortedDates = Array.from(dates).reverse(); // 倒序排，最近的日期在上面
+                const sortedDates = Array.from(dates).reverse(); 
 
                 sortedDates.forEach(dateStr => {
                     const div = document.createElement('div');
@@ -116,10 +120,11 @@
                     div.onclick = () => loadHistory(dateStr, div);
                     dateListDiv.appendChild(div);
                 });
+            }).catch(error => {
+                console.error("加载日期失败，请检查 Firebase 规则是否允许读取:", error);
             });
         }
 
-        // 渲染每一条气泡的代码（为了复用提取出来）
         function renderMessage(data) {
             const chatBox = document.getElementById('chat-box');
             if (data.date !== lastDate) {
@@ -131,57 +136,51 @@
             }
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
-            if (data.name !== document.getElementById('user-name').value) {
-                msgDiv.classList.add('other');
+            
+            // 核心逻辑：判断是谁发的消息
+            const currentMyName = document.getElementById('user-name').value;
+            if (data.name === currentMyName) {
+                msgDiv.classList.add('mine'); // 我发的，靠右绿色
+            } else {
+                msgDiv.classList.add('other'); // 别人发的，靠左白色
             }
+            
             msgDiv.innerHTML = `<div class="meta">${data.name} &nbsp; ${data.time}</div>${data.text}`;
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 核心功能2：加载最新实时聊天
         function loadLiveChat() {
             currentView = "live";
             lastDate = ""; 
-            document.getElementById('chat-box').innerHTML = ""; // 清空黑板
+            document.getElementById('chat-box').innerHTML = ""; 
 
-            // 恢复输入框可以使用
             document.getElementById('msg-input').disabled = false;
             document.getElementById('send-btn').disabled = false;
             document.getElementById('history-notice').style.display = 'none';
 
-            // 修改侧边栏的高亮颜色
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
             document.getElementById('live-chat-btn').classList.add('active');
 
-            // 关掉之前的监听，防止消息重复
             db.ref('messages').off();
-
-            // 重新开启监听最新50条
             db.ref('messages').limitToLast(50).on('child_added', snapshot => {
                 renderMessage(snapshot.val());
             });
         }
 
-        // 核心功能3：根据侧边栏点击的日期，加载当天的历史记录
         function loadHistory(dateStr, element) {
             currentView = "history";
             lastDate = "";
             document.getElementById('chat-box').innerHTML = ""; 
 
-            // 禁用输入框，防止误发
             document.getElementById('msg-input').disabled = true;
             document.getElementById('send-btn').disabled = true;
             document.getElementById('history-notice').style.display = 'block';
 
-            // 修改侧边栏高亮
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
-            // 关掉实时监听，不再接收新消息提醒
             db.ref('messages').off();
-
-            // 去数据库查找等于这一天的所有消息
             db.ref('messages').orderByChild('date').equalTo(dateStr).once('value', snapshot => {
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
@@ -191,9 +190,8 @@
             });
         }
 
-        // 发送消息
         function sendMessage() {
-            if (currentView !== "live") return; // 历史模式下禁止发送
+            if (currentView !== "live") return; 
 
             const name = document.getElementById('user-name').value;
             const text = document.getElementById('msg-input').value;
@@ -216,12 +214,6 @@
         function handleEnter(e) {
             if (e.key === 'Enter') sendMessage();
         }
-    </script>
-</body>
-</html>
-            
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
     </script>
 </body>
 </html>
