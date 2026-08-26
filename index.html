@@ -8,11 +8,17 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* 整体网页布局（左右分屏） */
+        /* 整体布局 */
         body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
 
-        /* 左侧边栏 (明亮清爽风格) */
-        #sidebar { width: 250px; background-color: #ffffff; color: #333; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
+        /* 侧边栏 (增加过渡动画和折叠状态) */
+        #sidebar { 
+            width: 250px; background-color: #ffffff; color: #333; 
+            display: flex; flex-direction: column; border-right: 1px solid #ddd; 
+            transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 10;
+        }
+        #sidebar.collapsed { margin-left: -250px; border-right: none; }
+        
         #sidebar h3 { padding: 20px; margin: 0; font-size: 15px; color: #555; border-bottom: 1px solid #eee; font-weight: bold; }
         #date-list { flex: 1; overflow-y: auto; }
         .history-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s; font-size: 14px; color: #444; }
@@ -20,35 +26,42 @@
         .history-item.active { background-color: #e6f7ff; font-weight: bold; color: #1890ff; border-left: 4px solid #1890ff; padding-left: 16px; }
 
         /* 右侧主聊天区 */
-        #main-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
-        h2 { margin-top: 0; color: #333; }
+        #main-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; min-width: 0; }
+        
+        /* 顶部标题栏：包含折叠按钮和标题 */
+        #header-container { width: 100%; max-width: 600px; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px; }
+        #toggle-btn { position: absolute; left: 0; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; padding: 5px; transition: 0.2s; }
+        #toggle-btn:hover { color: #1890ff; }
+        h2 { margin: 0; color: #333; font-size: 20px; }
 
         /* 聊天气泡显示区 */
-        #chat-box { width: 100%; max-width: 600px; background: #f0f2f5; padding: 20px; flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+        #chat-box { width: 100%; max-width: 600px; background: #f0f2f5; padding: 10px 20px; flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
         
-        /* 气泡通用样式 */
         .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; }
         .meta { font-size: 11px; color: #888; margin-bottom: 4px; }
         
-        /* 别人的消息 (白色，靠左) */
         .message.other { background: #ffffff; align-self: flex-start; border-top-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        /* 我的消息 (绿色，靠右) */
         .message.mine { background: #d5f5e3; align-self: flex-end; border-top-right-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .message.mine .meta { text-align: right; } /* 我的名字在气泡内也靠右显示 */
+        .message.mine .meta { text-align: right; }
 
         .date-divider { text-align: center; font-size: 12px; color: #aaa; margin: 15px 0; }
 
         /* 底部输入区 */
-        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); box-sizing: border-box;}
         #user-name { width: 80px; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
         #msg-input { flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
         #msg-input:focus, #user-name:focus { border-color: #1890ff; background: white; }
-        button { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; }
-        button:hover { background: #096dd9; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button.send-action { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        button.send-action:hover { background: #096dd9; }
+        button.send-action:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* 历史记录状态提示 */
         #history-notice { display: none; color: #d93025; font-size: 13px; margin-bottom: 10px; background: #fce8e6; padding: 8px 15px; border-radius: 20px; }
+
+        /* 手机端适配：屏幕小的时候侧边栏悬浮在上方 */
+        @media (max-width: 600px) {
+            #sidebar { position: absolute; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+            #sidebar.collapsed { margin-left: -260px; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
@@ -63,18 +76,22 @@
 
     <!-- 右侧主聊天区 -->
     <div id="main-area">
-        <h2>blablaba</h2>
+        <!-- 新增：带有菜单按钮的标题区 -->
+        <div id="header-container">
+            <button id="toggle-btn" onclick="toggleSidebar()">☰</button>
+            <h2>blablaba</h2>
+        </div>
+        
         <div id="history-notice">当前处于「历史记录」模式，无法发送新消息。请点击左侧返回最新聊天。</div>
         <div id="chat-box"></div>
         <div id="input-area">
-            <input type="text" id="user-name" placeholder="你的名字">
+            <input type="text" id="user-name" placeholder="名字">
             <input type="text" id="msg-input" placeholder="输入你想说的话..." onkeypress="handleEnter(event)">
-            <button id="send-btn" onclick="sendMessage()">发送</button>
+            <button class="send-action" id="send-btn" onclick="sendMessage()">发送</button>
         </div>
     </div>
 
     <script>
-        // 你的 Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
             authDomain: "blabalaba-69dc2.firebaseapp.com",
@@ -94,13 +111,14 @@
             const savedName = localStorage.getItem('chat_username');
             if (savedName) document.getElementById('user-name').value = savedName;
             
-            // 稍微延迟一点点加载侧边栏，确保数据库连接完毕
-            setTimeout(() => {
-                loadSidebarDates();
-            }, 500);
-            
+            setTimeout(() => { loadSidebarDates(); }, 500);
             loadLiveChat();
         };
+
+        // 控制侧边栏展开/收起的函数
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
 
         function loadSidebarDates() {
             db.ref('messages').once('value').then(snapshot => {
@@ -117,11 +135,15 @@
                     const div = document.createElement('div');
                     div.className = 'history-item';
                     div.innerText = "📅 " + dateStr;
-                    div.onclick = () => loadHistory(dateStr, div);
+                    div.onclick = () => {
+                        loadHistory(dateStr, div);
+                        // 在手机上看时，点击日期后自动收起侧边栏
+                        if(window.innerWidth <= 600) toggleSidebar();
+                    };
                     dateListDiv.appendChild(div);
                 });
             }).catch(error => {
-                console.error("加载日期失败，请检查 Firebase 规则是否允许读取:", error);
+                console.error("加载日期失败", error);
             });
         }
 
@@ -137,12 +159,11 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
             
-            // 核心逻辑：判断是谁发的消息
             const currentMyName = document.getElementById('user-name').value;
             if (data.name === currentMyName) {
-                msgDiv.classList.add('mine'); // 我发的，靠右绿色
+                msgDiv.classList.add('mine'); 
             } else {
-                msgDiv.classList.add('other'); // 别人发的，靠左白色
+                msgDiv.classList.add('other'); 
             }
             
             msgDiv.innerHTML = `<div class="meta">${data.name} &nbsp; ${data.time}</div>${data.text}`;
@@ -166,6 +187,8 @@
             db.ref('messages').limitToLast(50).on('child_added', snapshot => {
                 renderMessage(snapshot.val());
             });
+            
+            if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');
         }
 
         function loadHistory(dateStr, element) {
@@ -201,6 +224,16 @@
             }
 
             localStorage.setItem('chat_username', name);
+            
+            // 为了解决改名字后记录没更新的问题，发送前重新加载一下面板
+            const oldName = localStorage.getItem('last_known_name');
+            if (oldName !== name && oldName !== null) {
+                 localStorage.setItem('last_known_name', name);
+                 loadLiveChat(); // 重刷气泡左右位置
+            } else {
+                 localStorage.setItem('last_known_name', name);
+            }
+
             const now = new Date();
             db.ref('messages').push({ 
                 name, 
