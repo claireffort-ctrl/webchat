@@ -8,9 +8,20 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; overflow: hidden; }
+        
         #sidebar { width: 250px; background-color: #ffffff; color: #333; display: flex; flex-direction: column; border-right: 1px solid #ddd; transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 10; }
         #sidebar.collapsed { margin-left: -250px; border-right: none; }
-        #sidebar h3 { padding: 20px; margin: 0; font-size: 15px; color: #555; border-bottom: 1px solid #eee; font-weight: bold; }
+        #sidebar h3 { padding: 20px 20px 10px 20px; margin: 0; font-size: 15px; color: #555; font-weight: bold; }
+        
+        .search-container { padding: 0 15px 15px 15px; border-bottom: 1px solid #eee; }
+        .search-container input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; outline: none; background: #f9f9f9; }
+        .search-container input:focus { border-color: #1890ff; background: white; }
+
+        /* VIP 专属探测仪样式 */
+        #vip-presence-area { display: none; background-color: #fff9f9; border-bottom: 1px solid #eee; }
+        #vip-presence-area h4 { margin: 0; padding: 15px 20px 5px 20px; font-size: 13px; color: #d93025; font-weight: bold; }
+        #presence-list { padding: 5px 20px 15px 20px; font-size: 12px; color: #555; line-height: 1.6; }
+
         #date-list { flex: 1; overflow-y: auto; }
         .history-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s; font-size: 14px; color: #444; }
         .history-item:hover { background-color: #f9f9f9; }
@@ -38,7 +49,7 @@
         button.send-action { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; }
         button.send-action:hover { background: #096dd9; }
         button.send-action:disabled { background: #ccc; cursor: not-allowed; }
-        #history-notice { display: none; color: #d93025; font-size: 13px; margin-bottom: 10px; background: #fce8e6; padding: 8px 15px; border-radius: 20px; }
+        #history-notice { display: none; color: #d93025; font-size: 13px; margin-bottom: 10px; background: #fce8e6; padding: 8px 15px; border-radius: 20px; text-align: center; width: 100%; max-width: 600px; box-sizing: border-box;}
 
         @media (max-width: 600px) {
             #sidebar { position: absolute; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -50,6 +61,16 @@
 
     <div id="sidebar">
         <h3>Recents (聊天记录)</h3>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="🔍 搜索并回车..." onkeypress="handleSearch(event)">
+        </div>
+        
+        <!-- 新增：VIP专属探测仪 (默认隐藏) -->
+        <div id="vip-presence-area">
+            <h4>🕵️ 秘密探测仪</h4>
+            <div id="presence-list">加载中...</div>
+        </div>
+
         <div id="date-list">
             <div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()">🔴 返回最新聊天</div>
         </div>
@@ -60,10 +81,9 @@
             <button id="toggle-btn" onclick="toggleSidebar()">☰</button>
             <h2>blablaba</h2>
         </div>
-        <div id="history-notice">当前处于「历史记录」模式，无法发送新消息。请点击左侧返回最新聊天。</div>
+        <div id="history-notice"></div>
         <div id="chat-box"></div>
         <div id="input-area">
-            <!-- 加上了 oninput，只要名字有变动，立刻重新排版 -->
             <input type="text" id="user-name" placeholder="名字" oninput="resortChat()">
             <input type="text" id="msg-input" placeholder="输入你想说的话..." onkeypress="handleEnter(event)">
             <button class="send-action" id="send-btn" onclick="sendMessage()">发送</button>
@@ -88,20 +108,71 @@
 
         window.onload = function() {
             const savedName = localStorage.getItem('chat_username');
-            if (savedName) document.getElementById('user-name').value = savedName;
+            if (savedName) {
+                document.getElementById('user-name').value = savedName;
+                updatePresence(); // 如果有记录的名字，一打开网页就打卡
+            }
+            
+            checkVipStatus(); // 检查是不是 me
+            monitorPresence(); // 开启探测仪监听
+
             setTimeout(() => { loadSidebarDates(); }, 500);
             loadLiveChat();
         };
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 
-        // 智能重排版功能：打完名字自动归位
+        // --- 新增：打卡与VIP功能 ---
+        function updatePresence() {
+            const name = document.getElementById('user-name').value.trim();
+            if (name) {
+                const now = new Date();
+                const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                db.ref('presence/' + name).set(timeStr);
+            }
+        }
+
+        function checkVipStatus() {
+            const name = document.getElementById('user-name').value.trim();
+            const vipArea = document.getElementById('vip-presence-area');
+            // 只要名字等于 me，就显示模块
+            if (name === "me") {
+                vipArea.style.display = 'block';
+            } else {
+                vipArea.style.display = 'none';
+            }
+        }
+
+        function monitorPresence() {
+            db.ref('presence').on('value', snapshot => {
+                const listDiv = document.getElementById('presence-list');
+                listDiv.innerHTML = "";
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const userName = child.key;
+                        const lastTime = child.val();
+                        // 过滤掉自己，只看别人的时间
+                        if(userName !== "me") {
+                            const div = document.createElement('div');
+                            div.innerText = `👤 ${userName}: ${lastTime}`;
+                            listDiv.appendChild(div);
+                        }
+                    });
+                }
+            });
+        }
+        // ---------------------------
+
         let typingTimer;
         function resortChat() {
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
                 const name = document.getElementById('user-name').value.trim();
                 localStorage.setItem('chat_username', name);
+                
+                checkVipStatus(); // 每次改名字都检查一次是不是VIP
+                updatePresence(); // 改完名字顺便打个卡
+
                 if (currentView === "live") loadLiveChat();
             }, 500);
         }
@@ -133,7 +204,6 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
             
-            // 核心修复：清理掉所有多余空格再进行对比
             const currentMyName = document.getElementById('user-name').value.trim();
             const messageSenderName = (data.name || "").trim();
             
@@ -148,8 +218,43 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        function handleSearch(e) {
+            if (e.key === 'Enter') {
+                const keyword = document.getElementById('search-input').value.trim();
+                if (!keyword) { loadLiveChat(); return; }
+                
+                currentView = "search"; lastDate = ""; document.getElementById('chat-box').innerHTML = ""; 
+                document.getElementById('msg-input').disabled = true; document.getElementById('send-btn').disabled = true;
+                
+                const notice = document.getElementById('history-notice');
+                notice.innerText = `当前为「搜索模式」，搜索关键词: ${keyword}。点击左侧返回最新聊天。`;
+                notice.style.display = 'block';
+                
+                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+
+                db.ref('messages').off();
+                db.ref('messages').once('value', snapshot => {
+                    let foundCount = 0;
+                    if (snapshot.exists()) { 
+                        snapshot.forEach(child => { 
+                            const data = child.val();
+                            if (data.text && data.text.includes(keyword)) {
+                                renderMessage(data); 
+                                foundCount++;
+                            }
+                        }); 
+                    }
+                    if (foundCount === 0) {
+                        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`;
+                    }
+                });
+                if(window.innerWidth <= 600) toggleSidebar();
+            }
+        }
+
         function loadLiveChat() {
             currentView = "live"; lastDate = ""; document.getElementById('chat-box').innerHTML = ""; 
+            document.getElementById('search-input').value = ""; 
             document.getElementById('msg-input').disabled = false; document.getElementById('send-btn').disabled = false;
             document.getElementById('history-notice').style.display = 'none';
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
@@ -162,8 +267,13 @@
 
         function loadHistory(dateStr, element) {
             currentView = "history"; lastDate = ""; document.getElementById('chat-box').innerHTML = ""; 
+            document.getElementById('search-input').value = ""; 
             document.getElementById('msg-input').disabled = true; document.getElementById('send-btn').disabled = true;
-            document.getElementById('history-notice').style.display = 'block';
+            
+            const notice = document.getElementById('history-notice');
+            notice.innerText = "当前处于「历史记录」模式，无法发送新消息。请点击左侧返回最新聊天。";
+            notice.style.display = 'block';
+            
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
@@ -175,12 +285,13 @@
 
         function sendMessage() {
             if (currentView !== "live") return; 
-            // 核心修复：发送时自动清理掉名字和内容前后的空格
             const name = document.getElementById('user-name').value.trim();
             const text = document.getElementById('msg-input').value.trim();
             if (!text || !name) { alert("名字和消息都不能为空哦！"); return; }
 
             localStorage.setItem('chat_username', name);
+            updatePresence(); // 每次发消息也更新一次活跃时间
+
             const now = new Date();
             db.ref('messages').push({ 
                 name: name, 
