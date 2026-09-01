@@ -23,8 +23,12 @@
         #presence-list { padding: 5px 20px 15px 20px; font-size: 12px; color: #555; line-height: 1.6; }
 
         #date-list { flex: 1; overflow-y: auto; }
-        .history-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s; font-size: 14px; color: #444; }
-        .history-item:hover { background-color: #f9f9f9; }
+        
+        /* 新增：月份分组标题样式 */
+        .month-header { padding: 8px 20px; font-size: 12px; font-weight: bold; color: #888; background-color: #f9f9f9; border-bottom: 1px solid #eee; border-top: 1px solid #eee; }
+        
+        .history-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s; font-size: 14px; color: #444; }
+        .history-item:hover { background-color: #f0f7ff; }
         .history-item.active { background-color: #e6f7ff; font-weight: bold; color: #1890ff; border-left: 4px solid #1890ff; padding-left: 16px; }
 
         #main-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; min-width: 0; }
@@ -60,19 +64,18 @@
 <body>
 
     <div id="sidebar">
-        <h3>Recents (聊天记录)</h3>
+        <h3>Recents /h3>
         <div class="search-container">
             <input type="text" id="search-input" placeholder="🔍 搜索并回车..." onkeypress="handleSearch(event)">
         </div>
         
-        <!-- 新增：VIP专属探测仪 (默认隐藏) -->
         <div id="vip-presence-area">
-            <h4>🕵️ 秘密探测仪</h4>
+            <h4>🕵️ </h4>
             <div id="presence-list">加载中...</div>
         </div>
 
         <div id="date-list">
-            <div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()">🔴 返回最新聊天</div>
+            <!-- 动态渲染的列表会插在这里 -->
         </div>
     </div>
 
@@ -110,11 +113,11 @@
             const savedName = localStorage.getItem('chat_username');
             if (savedName) {
                 document.getElementById('user-name').value = savedName;
-                updatePresence(); // 如果有记录的名字，一打开网页就打卡
+                updatePresence(); 
             }
             
-            checkVipStatus(); // 检查是不是 me
-            monitorPresence(); // 开启探测仪监听
+            checkVipStatus(); 
+            monitorPresence(); 
 
             setTimeout(() => { loadSidebarDates(); }, 500);
             loadLiveChat();
@@ -122,7 +125,6 @@
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 
-        // --- 新增：打卡与VIP功能 ---
         function updatePresence() {
             const name = document.getElementById('user-name').value.trim();
             if (name) {
@@ -135,12 +137,7 @@
         function checkVipStatus() {
             const name = document.getElementById('user-name').value.trim();
             const vipArea = document.getElementById('vip-presence-area');
-            // 只要名字等于 me，就显示模块
-            if (name === "me") {
-                vipArea.style.display = 'block';
-            } else {
-                vipArea.style.display = 'none';
-            }
+            if (name === "me") { vipArea.style.display = 'block'; } else { vipArea.style.display = 'none'; }
         }
 
         function monitorPresence() {
@@ -151,7 +148,6 @@
                     snapshot.forEach(child => {
                         const userName = child.key;
                         const lastTime = child.val();
-                        // 过滤掉自己，只看别人的时间
                         if(userName !== "me") {
                             const div = document.createElement('div');
                             div.innerText = `👤 ${userName}: ${lastTime}`;
@@ -161,7 +157,6 @@
                 }
             });
         }
-        // ---------------------------
 
         let typingTimer;
         function resortChat() {
@@ -169,26 +164,49 @@
             typingTimer = setTimeout(() => {
                 const name = document.getElementById('user-name').value.trim();
                 localStorage.setItem('chat_username', name);
-                
-                checkVipStatus(); // 每次改名字都检查一次是不是VIP
-                updatePresence(); // 改完名字顺便打个卡
-
+                checkVipStatus(); 
+                updatePresence(); 
                 if (currentView === "live") loadLiveChat();
             }, 500);
         }
 
+        // 修改点：按月份分组并渲染侧边栏日期列表
         function loadSidebarDates() {
             db.ref('messages').once('value').then(snapshot => {
                 const dates = new Set(); 
                 snapshot.forEach(child => { if(child.val().date) dates.add(child.val().date); });
+                
                 const dateListDiv = document.getElementById('date-list');
+                // 初始化保留最新聊天按钮
+                dateListDiv.innerHTML = '<div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()">🔴 返回最新聊天</div>';
+                
+                // 将日期按月分组
+                const groupedDates = {};
                 Array.from(dates).reverse().forEach(dateStr => {
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerText = "📅 " + dateStr;
-                    div.onclick = () => { loadHistory(dateStr, div); if(window.innerWidth <= 600) toggleSidebar(); };
-                    dateListDiv.appendChild(div);
+                    const d = new Date(dateStr);
+                    let monthGroup = "未知记录";
+                    if (!isNaN(d.getTime())) {
+                        monthGroup = d.getFullYear() + "年" + (d.getMonth() + 1) + "月";
+                    }
+                    if (!groupedDates[monthGroup]) { groupedDates[monthGroup] = []; }
+                    groupedDates[monthGroup].push(dateStr);
                 });
+
+                // 按组渲染 DOM
+                for (const month in groupedDates) {
+                    const header = document.createElement('div');
+                    header.className = 'month-header';
+                    header.innerText = month;
+                    dateListDiv.appendChild(header);
+
+                    groupedDates[month].forEach(dateStr => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item';
+                        div.innerText = "📅 " + dateStr;
+                        div.onclick = () => { loadHistory(dateStr, div); if(window.innerWidth <= 600) toggleSidebar(); };
+                        dateListDiv.appendChild(div);
+                    });
+                }
             });
         }
 
@@ -207,11 +225,8 @@
             const currentMyName = document.getElementById('user-name').value.trim();
             const messageSenderName = (data.name || "").trim();
             
-            if (messageSenderName === currentMyName && currentMyName !== "") {
-                msgDiv.classList.add('mine'); 
-            } else {
-                msgDiv.classList.add('other'); 
-            }
+            if (messageSenderName === currentMyName && currentMyName !== "") { msgDiv.classList.add('mine'); } 
+            else { msgDiv.classList.add('other'); }
             
             msgDiv.innerHTML = `<div class="meta">${data.name} &nbsp; ${data.time}</div>${data.text}`;
             chatBox.appendChild(msgDiv);
@@ -238,15 +253,10 @@
                     if (snapshot.exists()) { 
                         snapshot.forEach(child => { 
                             const data = child.val();
-                            if (data.text && data.text.includes(keyword)) {
-                                renderMessage(data); 
-                                foundCount++;
-                            }
+                            if (data.text && data.text.includes(keyword)) { renderMessage(data); foundCount++; }
                         }); 
                     }
-                    if (foundCount === 0) {
-                        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`;
-                    }
+                    if (foundCount === 0) { document.getElementById('chat-box').innerHTML = `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`; }
                 });
                 if(window.innerWidth <= 600) toggleSidebar();
             }
@@ -258,7 +268,9 @@
             document.getElementById('msg-input').disabled = false; document.getElementById('send-btn').disabled = false;
             document.getElementById('history-notice').style.display = 'none';
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('live-chat-btn').classList.add('active');
+            
+            const liveBtn = document.getElementById('live-chat-btn');
+            if (liveBtn) liveBtn.classList.add('active');
 
             db.ref('messages').off();
             db.ref('messages').limitToLast(50).on('child_added', snapshot => { renderMessage(snapshot.val()); });
@@ -290,7 +302,7 @@
             if (!text || !name) { alert("名字和消息都不能为空哦！"); return; }
 
             localStorage.setItem('chat_username', name);
-            updatePresence(); // 每次发消息也更新一次活跃时间
+            updatePresence(); 
 
             const now = new Date();
             db.ref('messages').push({ 
