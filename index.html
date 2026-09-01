@@ -79,17 +79,14 @@
         }
         #stealth-cover h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
         #stealth-cover p { font-size: 14px; color: #666; user-select: none; }
-        /* 去除手机端点击时的蓝色高亮背景，防止露馅 */
         #secret-trigger { cursor: default; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
 
-    <!-- 隐蔽伪装层 -->
     <div id="stealth-cover">
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
-        <!-- 这个标点符号就是机关，点它没反应，只有快点3下才行 -->
         <p id="secret-trigger" style="margin-top: 50px; opacity: 0.5;">server-status: offline.</p>
     </div>
 
@@ -105,7 +102,6 @@
         </div>
 
         <div id="date-list">
-            <!-- 动态渲染的列表会插在这里 -->
         </div>
     </div>
 
@@ -179,7 +175,11 @@
             if (name) {
                 const now = new Date();
                 const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                db.ref('presence/' + name).set(timeStr);
+                // 升级：存入精确时间戳以便于进行24小时判断
+                db.ref('presence/' + name).set({
+                    timeStr: timeStr,
+                    timestamp: now.getTime()
+                });
             }
         }
 
@@ -193,16 +193,42 @@
             db.ref('presence').on('value', snapshot => {
                 const listDiv = document.getElementById('presence-list');
                 listDiv.innerHTML = "";
+                let activeCount = 0;
+                const nowMs = new Date().getTime();
+                const oneDayMs = 24 * 60 * 60 * 1000; // 24小时的毫秒数
+
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const userName = child.key;
-                        const lastTime = child.val();
+                        const data = child.val();
+                        let lastTimeStr = "";
+                        let lastTimestamp = 0;
+
+                        // 兼容新旧数据结构
+                        if (typeof data === 'string') {
+                            lastTimeStr = data;
+                            // 尝试转换旧版本的日期格式
+                            let parsedStr = data.replace(/年|月/g, '/').replace(/日/g, '');
+                            lastTimestamp = new Date(parsedStr).getTime();
+                        } else if (data && data.timestamp) {
+                            lastTimeStr = data.timeStr;
+                            lastTimestamp = data.timestamp;
+                        }
+
+                        // 只统计别人，且时间戳在24小时之内的记录
                         if(userName !== "me") {
-                            const div = document.createElement('div');
-                            div.innerText = `👤 ${userName}: ${lastTime}`;
-                            listDiv.appendChild(div);
+                            if (!isNaN(lastTimestamp) && (nowMs - lastTimestamp) <= oneDayMs) {
+                                const div = document.createElement('div');
+                                div.innerText = `👤 ${userName}: ${lastTimeStr}`;
+                                listDiv.appendChild(div);
+                                activeCount++;
+                            }
                         }
                     });
+                }
+                
+                if (activeCount === 0) {
+                    listDiv.innerHTML = "<div style='color:#aaa; font-style:italic;'>24小时内暂无活跃记录</div>";
                 }
             });
         }
