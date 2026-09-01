@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>blablaba</title>
+    <title>404 Not Found</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -69,12 +69,32 @@
             #sidebar { position: absolute; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
             #sidebar.collapsed { margin-left: -260px; box-shadow: none; }
         }
+
+        /* 隐蔽伪装层样式 */
+        #stealth-cover {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #ffffff; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: #333; font-family: monospace;
+        }
+        #stealth-cover h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
+        #stealth-cover p { font-size: 14px; color: #666; user-select: none; }
+        /* 去除手机端点击时的蓝色高亮背景，防止露馅 */
+        #secret-trigger { cursor: default; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
 
+    <!-- 隐蔽伪装层 -->
+    <div id="stealth-cover">
+        <h1>404 Not Found</h1>
+        <p>The requested URL was not found on this server.</p>
+        <!-- 这个标点符号就是机关，点它没反应，只有快点3下才行 -->
+        <p id="secret-trigger" style="margin-top: 50px; opacity: 0.5;">server-status: offline.</p>
+    </div>
+
     <div id="sidebar">
-        <h3>Recents (聊天记录)</h3>
+        <h3>Recents</h3>
         <div class="search-container">
             <input type="text" id="search-input" placeholder="🔍 搜索并回车..." onkeypress="handleSearch(event)">
         </div>
@@ -104,6 +124,27 @@
     </div>
 
     <script>
+        // --- 隐蔽解锁机关 ---
+        let tapCount = 0;
+        let tapTimer = null;
+        
+        document.getElementById('secret-trigger').addEventListener('click', function() {
+            tapCount++;
+            clearTimeout(tapTimer);
+            
+            if (tapCount >= 3) {
+                document.getElementById('stealth-cover').style.display = 'none';
+                sessionStorage.setItem('unlocked', 'true');
+            }
+            
+            tapTimer = setTimeout(() => { tapCount = 0; }, 500);
+        });
+
+        if (sessionStorage.getItem('unlocked') === 'true') {
+            document.getElementById('stealth-cover').style.display = 'none';
+        }
+
+        // --- Firebase 核心逻辑 ---
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
             authDomain: "blabalaba-69dc2.firebaseapp.com",
@@ -205,7 +246,6 @@
                     const content = document.createElement('div');
                     content.className = 'month-content'; 
                     
-                    // 点击标题折叠/展开
                     header.onclick = () => {
                         const isOpen = content.classList.contains('open');
                         content.classList.toggle('open');
@@ -219,7 +259,7 @@
                         const div = document.createElement('div');
                         div.className = 'history-item';
                         div.innerText = "📅 " + dateStr;
-                        div.dataset.date = dateStr; // 保存date属性用于定位
+                        div.dataset.date = dateStr; 
                         div.onclick = () => { loadHistory(dateStr, div); if(window.innerWidth <= 600) toggleSidebar(); };
                         content.appendChild(div);
                     });
@@ -238,7 +278,7 @@
             }
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
-            msgDiv.id = 'msg-' + msgKey; // 绑定唯一ID，用于跳转定位
+            msgDiv.id = 'msg-' + msgKey; 
             
             const currentMyName = document.getElementById('user-name').value.trim();
             const messageSenderName = (data.name || "").trim();
@@ -272,7 +312,6 @@
                         snapshot.forEach(child => { 
                             const data = child.val();
                             if (data.text && data.text.includes(keyword)) { 
-                                // 渲染为可点击的搜索结果卡片
                                 const chatBox = document.getElementById('chat-box');
                                 const msgDiv = document.createElement('div');
                                 msgDiv.className = 'message search-result-card';
@@ -293,10 +332,8 @@
             }
         }
 
-        // 跳转到上下文的核心逻辑
         function jumpToContext(dateStr, msgKey) {
             let targetEl = null;
-            // 自动展开目标月份的折叠面板，并找到对应的日期元素
             document.querySelectorAll('.history-item').forEach(el => {
                 if (el.dataset.date === dateStr) {
                     targetEl = el;
@@ -321,7 +358,6 @@
             if (liveBtn) liveBtn.classList.add('active');
 
             db.ref('messages').off();
-            // 传入 snapshot.key
             db.ref('messages').limitToLast(50).on('child_added', snapshot => { renderMessage(snapshot.val(), snapshot.key); });
             if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');
         }
@@ -343,7 +379,6 @@
                 if (snapshot.exists()) { 
                     snapshot.forEach(child => { renderMessage(child.val(), child.key); }); 
                     
-                    // 如果是从搜索跳过来的，执行滚动定位和高亮
                     if (jumpMsgKey) {
                         setTimeout(() => {
                             const targetMsg = document.getElementById('msg-' + jumpMsgKey);
@@ -351,7 +386,7 @@
                                 targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 targetMsg.classList.add('highlight-target');
                             }
-                        }, 100); // 稍微延迟确保DOM渲染完毕
+                        }, 100); 
                     }
                 }
             });
