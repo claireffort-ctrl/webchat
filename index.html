@@ -140,6 +140,15 @@
             document.getElementById('stealth-cover').style.display = 'none';
         }
 
+        // --- 新增：切后台自动锁定 ---
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.getElementById('stealth-cover').style.display = 'flex';
+                sessionStorage.removeItem('unlocked');
+                tapCount = 0;
+            }
+        });
+
         // --- Firebase 核心逻辑 ---
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
@@ -175,7 +184,6 @@
             if (name) {
                 const now = new Date();
                 const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                // 升级：存入精确时间戳以便于进行24小时判断
                 db.ref('presence/' + name).set({
                     timeStr: timeStr,
                     timestamp: now.getTime()
@@ -195,7 +203,7 @@
                 listDiv.innerHTML = "";
                 let activeCount = 0;
                 const nowMs = new Date().getTime();
-                const oneDayMs = 24 * 60 * 60 * 1000; // 24小时的毫秒数
+                const oneDayMs = 24 * 60 * 60 * 1000;
 
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
@@ -204,10 +212,8 @@
                         let lastTimeStr = "";
                         let lastTimestamp = 0;
 
-                        // 兼容新旧数据结构
                         if (typeof data === 'string') {
                             lastTimeStr = data;
-                            // 尝试转换旧版本的日期格式
                             let parsedStr = data.replace(/年|月/g, '/').replace(/日/g, '');
                             lastTimestamp = new Date(parsedStr).getTime();
                         } else if (data && data.timestamp) {
@@ -215,7 +221,6 @@
                             lastTimestamp = data.timestamp;
                         }
 
-                        // 只统计别人，且时间戳在24小时之内的记录
                         if(userName !== "me") {
                             if (!isNaN(lastTimestamp) && (nowMs - lastTimestamp) <= oneDayMs) {
                                 const div = document.createElement('div');
