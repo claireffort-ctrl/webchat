@@ -52,7 +52,7 @@
 
         #chat-box { width: 100%; max-width: 600px; background: #f0f2f5; padding: 10px 20px; flex: 1; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; scroll-behavior: smooth; }
         
-        .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; white-space: pre-wrap; user-select: none; /* 防止长按时系统选中文字干扰 */ -webkit-user-select: none; }
+        .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; white-space: pre-wrap; user-select: none; -webkit-user-select: none; }
         .meta { font-size: 11px; color: #888; margin-bottom: 4px; white-space: normal; }
         
         .quote-block { font-size: 12px; color: #666; background: rgba(0,0,0,0.04); padding: 6px 10px; border-left: 3px solid #ccc; border-radius: 4px; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -432,36 +432,27 @@
                 quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
 
-            msgDiv.innerHTML = `
-                ${quoteHtml}
-                <div class="meta">
-                    <span>${data.name} &nbsp; ${data.time}</span>
-                </div>
-                ${data.text}
-            `;
+            // 修改：去除模板字符串中的回车和缩进导致的空行
+            msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + data.text;
 
-            // --- 新增：长按触发引用逻辑 ---
             let pressTimer;
             const safeText = data.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             
             const startPress = () => {
                 pressTimer = setTimeout(() => {
                     initiateReply(data.name, safeText);
-                    if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
+                    if (navigator.vibrate) navigator.vibrate(50); 
                 }, 600); 
             };
             const cancelPress = () => { clearTimeout(pressTimer); };
 
-            // 移动端长按支持，并在滑动时取消长按
             msgDiv.addEventListener('touchstart', startPress, {passive: true});
             msgDiv.addEventListener('touchend', cancelPress);
             msgDiv.addEventListener('touchmove', cancelPress);
             
-            // 电脑端长按支持
             msgDiv.addEventListener('mousedown', startPress);
             msgDiv.addEventListener('mouseup', cancelPress);
             msgDiv.addEventListener('mouseleave', cancelPress);
-            // ------------------------
 
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
