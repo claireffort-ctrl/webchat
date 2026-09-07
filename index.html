@@ -588,12 +588,19 @@
             document.getElementById('msg-input').focus();
         }
 
-        function handleEnter(e) { 
+                function handleEnter(e) { 
+            // 如果是手机端（屏幕宽度小于等于 600px），不拦截 Enter 键，让它正常换行
+            if (window.innerWidth <= 600) {
+                return; 
+            }
+            
+            // 如果是电脑端：按下 Enter 且没有按住 Shift 时，直接发送
             if (e.key === 'Enter' && !e.shiftKey) { 
                 e.preventDefault(); 
                 sendMessage(); 
             }
         }
+
     </script>
 </body>
 </html>
