@@ -23,7 +23,6 @@
 
         #date-list { flex: 1; overflow-y: auto; }
         
-        /* 折叠菜单样式 */
         .month-header { padding: 10px 20px; font-size: 13px; font-weight: bold; color: #666; background-color: #f5f5f5; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; user-select: none; }
         .month-header:hover { background-color: #eaeaea; }
         .month-content { display: none; flex-direction: column; }
@@ -39,28 +38,38 @@
         #toggle-btn:hover { color: #1890ff; }
         h2 { margin: 0; color: #333; font-size: 20px; }
 
+        /* 新增：公告栏样式 */
+        #announcement-container { width: 100%; max-width: 600px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px; box-sizing: border-box; color: #d46b08; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .announcement-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+        .announcement-header button { background: none; border: none; color: #1890ff; cursor: pointer; font-size: 13px; padding: 0; }
+        #announcement-content { font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+        #announcement-edit-area { width: 100%; box-sizing: border-box; border: 1px solid #ffe58f; background: white; border-radius: 4px; padding: 8px; min-height: 60px; outline: none; resize: vertical; display: none; margin-bottom: 8px; font-family: inherit; font-size: 13px; color: #333; }
+        #save-announcement-btn { background: #1890ff; color: white; border: none; border-radius: 4px; padding: 6px 14px; cursor: pointer; font-size: 12px; display: none; float: right; font-weight: bold; }
+        #announcement-container::after { content: ""; display: table; clear: both; }
+
         #chat-box { width: 100%; max-width: 600px; background: #f0f2f5; padding: 10px 20px; flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; scroll-behavior: smooth; }
-        .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; }
-        .meta { font-size: 11px; color: #888; margin-bottom: 4px; }
+        /* 增加 white-space: pre-wrap 以支持换行显示 */
+        .message { padding: 10px 14px; border-radius: 8px; width: fit-content; max-width: 75%; word-break: break-all; line-height: 1.5; position: relative; white-space: pre-wrap; }
+        .meta { font-size: 11px; color: #888; margin-bottom: 4px; white-space: normal; }
         
         .message.other { background: #ffffff; align-self: flex-start; border-top-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .message.mine { background: #d5f5e3; align-self: flex-end; border-top-right-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .message.mine .meta { text-align: right; }
-        .date-divider { text-align: center; font-size: 12px; color: #aaa; margin: 15px 0; }
+        .date-divider { text-align: center; font-size: 12px; color: #aaa; margin: 15px 0; white-space: normal; }
 
-        /* 搜索结果卡片样式 */
         .search-result-card { background: #ffffff; align-self: center; width: 90%; border: 1px solid #1890ff; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(24,144,255,0.15); }
         .search-result-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(24,144,255,0.25); }
-        
-        /* 目标消息高亮动画 */
         @keyframes highlight-pulse { 0% { background-color: #ffe58f; transform: scale(1.02); } 100% { background-color: inherit; transform: scale(1); } }
         .highlight-target { animation: highlight-pulse 2s ease-out; }
 
-        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); box-sizing: border-box;}
-        #user-name { width: 80px; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
-        #msg-input { flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9;}
+        #input-area { width: 100%; max-width: 600px; display: flex; gap: 10px; margin-bottom: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); box-sizing: border-box; align-items: flex-end; }
+        #user-name { width: 80px; padding: 12px 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9; height: 42px; box-sizing: border-box; }
+        
+        /* 修改：把输入框改成多行文本框 */
+        #msg-input { flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 5px; outline: none; background: #f9f9f9; resize: none; height: 42px; font-family: inherit; font-size: 14px; box-sizing: border-box; line-height: 1.4; overflow-y: auto; }
         #msg-input:focus, #user-name:focus { border-color: #1890ff; background: white; }
-        button.send-action { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        
+        button.send-action { padding: 0 20px; background: #1890ff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; height: 42px; box-sizing: border-box; }
         button.send-action:hover { background: #096dd9; }
         button.send-action:disabled { background: #ccc; cursor: not-allowed; }
         #history-notice { display: none; color: #d93025; font-size: 13px; margin-bottom: 10px; background: #fce8e6; padding: 8px 15px; border-radius: 20px; text-align: center; width: 100%; max-width: 600px; box-sizing: border-box;}
@@ -70,7 +79,6 @@
             #sidebar.collapsed { margin-left: -260px; box-shadow: none; }
         }
 
-        /* 隐蔽伪装层样式 */
         #stealth-cover {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #ffffff; z-index: 9999;
@@ -110,29 +118,39 @@
             <button id="toggle-btn" onclick="toggleSidebar()">☰</button>
             <h2>blablaba</h2>
         </div>
+        
+        <!-- 新增：公告栏区域 -->
+        <div id="announcement-container">
+            <div class="announcement-header">
+                <span>📢 专属公告栏</span>
+                <button id="edit-announcement-btn" onclick="toggleEditAnnouncement()">编辑</button>
+            </div>
+            <div id="announcement-content">加载中...</div>
+            <textarea id="announcement-edit-area" placeholder="在这里写下新的公告..."></textarea>
+            <button id="save-announcement-btn" onclick="saveAnnouncement()">保存公告</button>
+        </div>
+
         <div id="history-notice"></div>
         <div id="chat-box"></div>
         <div id="input-area">
             <input type="text" id="user-name" placeholder="名字" oninput="resortChat()">
-            <input type="text" id="msg-input" placeholder="输入你想说的话..." onkeypress="handleEnter(event)">
+            <!-- 改为 textarea 支持换行，修改事件为 onkeydown -->
+            <textarea id="msg-input" placeholder="按 Enter 发送，Shift+Enter 换行..." onkeydown="handleEnter(event)"></textarea>
             <button class="send-action" id="send-btn" onclick="sendMessage()">发送</button>
         </div>
     </div>
 
     <script>
-        // --- 隐蔽解锁机关 ---
         let tapCount = 0;
         let tapTimer = null;
         
         document.getElementById('secret-trigger').addEventListener('click', function() {
             tapCount++;
             clearTimeout(tapTimer);
-            
             if (tapCount >= 3) {
                 document.getElementById('stealth-cover').style.display = 'none';
                 sessionStorage.setItem('unlocked', 'true');
             }
-            
             tapTimer = setTimeout(() => { tapCount = 0; }, 500);
         });
 
@@ -140,7 +158,6 @@
             document.getElementById('stealth-cover').style.display = 'none';
         }
 
-        // --- 新增：切后台自动锁定 ---
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
                 document.getElementById('stealth-cover').style.display = 'flex';
@@ -149,7 +166,6 @@
             }
         });
 
-        // --- Firebase 核心逻辑 ---
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
             authDomain: "blabalaba-69dc2.firebaseapp.com",
@@ -173,21 +189,63 @@
             }
             checkVipStatus(); 
             monitorPresence(); 
+            monitorAnnouncement(); // 加载公告栏
             setTimeout(() => { loadSidebarDates(); }, 500);
             loadLiveChat();
         };
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 
+        // --- 新增：公告栏逻辑 ---
+        function monitorAnnouncement() {
+            db.ref('announcement').on('value', snapshot => {
+                const content = snapshot.val() || "暂时没有公告哦~ 可以点击右上角编辑。";
+                document.getElementById('announcement-content').innerText = content;
+            });
+        }
+
+        function toggleEditAnnouncement() {
+            const contentDiv = document.getElementById('announcement-content');
+            const editArea = document.getElementById('announcement-edit-area');
+            const saveBtn = document.getElementById('save-announcement-btn');
+            const editBtn = document.getElementById('edit-announcement-btn');
+
+            if (editArea.style.display === 'none' || editArea.style.display === '') {
+                // 开启编辑模式
+                contentDiv.style.display = 'none';
+                editArea.style.display = 'block';
+                saveBtn.style.display = 'block';
+                editBtn.innerText = '取消编辑';
+                
+                // 从数据库读取最新内容填入编辑框
+                db.ref('announcement').once('value').then(snap => {
+                    editArea.value = snap.val() || "";
+                    editArea.focus();
+                });
+            } else {
+                // 取消编辑模式
+                contentDiv.style.display = 'block';
+                editArea.style.display = 'none';
+                saveBtn.style.display = 'none';
+                editBtn.innerText = '编辑';
+            }
+        }
+
+        function saveAnnouncement() {
+            const newText = document.getElementById('announcement-edit-area').value.trim();
+            db.ref('announcement').set(newText).then(() => {
+                // 保存成功后自动切换回阅览模式
+                toggleEditAnnouncement();
+            });
+        }
+        // ------------------------
+
         function updatePresence() {
             const name = document.getElementById('user-name').value.trim();
             if (name) {
                 const now = new Date();
                 const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                db.ref('presence/' + name).set({
-                    timeStr: timeStr,
-                    timestamp: now.getTime()
-                });
+                db.ref('presence/' + name).set({ timeStr: timeStr, timestamp: now.getTime() });
             }
         }
 
@@ -440,9 +498,18 @@
                 time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
             });
             document.getElementById('msg-input').value = ""; 
+            // 发送后重新聚焦输入框
+            document.getElementById('msg-input').focus();
         }
 
-        function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
+        // 修改：处理多行输入的回车事件
+        function handleEnter(e) { 
+            // 只有按下 Enter 且没有按住 Shift 键时，才发送消息
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); // 阻止默认的换行行为
+                sendMessage(); 
+            }
+        }
     </script>
 </body>
 </html>
