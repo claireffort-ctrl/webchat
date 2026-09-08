@@ -605,13 +605,27 @@
             document.getElementById('msg-input').focus();
         }
 
+JavaScript
         function handleEnter(e) { 
-            if (window.innerWidth <= 600) {
+            // 1. 防止中文输入法冲突：如果正在打拼音（还没变成汉字），按什么都不干预
+            if (e.isComposing || e.keyCode === 229) {
                 return; 
             }
-            if (e.key === 'Enter' && !e.shiftKey) { 
-                e.preventDefault(); 
-                sendMessage(); 
+
+            // 2. 如果按下的确实是 Enter 键
+            if (e.key === 'Enter') {
+                // 判断如果是手机端（屏幕宽度小于等于 600px），让它正常换行
+                if (window.innerWidth <= 600) {
+                    return; 
+                }
+
+                // 如果是电脑端：
+                if (!e.shiftKey) { 
+                    // 没按 Shift，纯按 Enter -> 阻止自带的换行，直接发送消息
+                    e.preventDefault(); 
+                    sendMessage(); 
+                }
+                // 如果按了 Shift + Enter，代码不阻拦，文本框会自动换行
             }
         }
     </script>
