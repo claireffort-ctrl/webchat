@@ -605,20 +605,23 @@
             document.getElementById('msg-input').focus();
         }
 
-        function handleEnter(e) { 
+       function handleEnter(e) { 
             // 1. 防止中文输入法冲突：如果正在打拼音（还没变成汉字），按什么都不干预
             if (e.isComposing || e.keyCode === 229) {
                 return; 
             }
 
-            // 2. 如果按下的确实是 Enter 键
+            // 2. 精准识别是不是真正的手机设备（而不是看窗口宽度）
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // 3. 如果按下的确实是 Enter 键
             if (e.key === 'Enter') {
-                // 判断如果是手机端（屏幕宽度小于等于 600px），让它正常换行
-                if (window.innerWidth <= 600) {
+                // 如果是真的手机设备，不拦截 Enter，让它正常换行
+                if (isMobileDevice) {
                     return; 
                 }
 
-                // 如果是电脑端：
+                // 如果是电脑端（不管你把窗口缩得多小！）：
                 if (!e.shiftKey) { 
                     // 没按 Shift，纯按 Enter -> 阻止自带的换行，直接发送消息
                     e.preventDefault(); 
