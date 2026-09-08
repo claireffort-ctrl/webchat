@@ -156,6 +156,22 @@
     </div>
 
     <script>
+        // --- 核心防破解装甲 (防懂行朋友 F12/右键/控制台) ---
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) ||
+               (e.ctrlKey && ['U','u'].includes(e.key))) {
+                e.preventDefault();
+            }
+        });
+        setInterval(function() {
+            try {
+                (function() { return false; }['constructor']('debugger')());
+            } catch (err) {}
+        }, 1000);
+        // ----------------------------------------------------
+
         let tapCount = 0;
         let tapTimer = null;
         
@@ -193,6 +209,8 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const ROOM_PREFIX = "mads0330/"; // 安全外壳路径
+        
         let lastDate = "";
         let currentView = "live"; 
         let currentReplyTarget = null; 
@@ -229,7 +247,7 @@
         }
 
         function monitorAnnouncement() {
-            db.ref('announcement').on('value', snapshot => {
+            db.ref(ROOM_PREFIX + 'announcement').on('value', snapshot => {
                 const content = snapshot.val() || "暂时没有 reminder 记录。";
                 document.getElementById('announcement-content').innerText = content;
             });
@@ -256,7 +274,7 @@
                 editArea.style.display = 'block';
                 saveBtn.style.display = 'block';
                 editBtn.innerText = '取消';
-                db.ref('announcement').once('value').then(snap => {
+                db.ref(ROOM_PREFIX + 'announcement').once('value').then(snap => {
                     editArea.value = snap.val() || "";
                     editArea.focus();
                 });
@@ -270,7 +288,7 @@
 
         function saveAnnouncement() {
             const newText = document.getElementById('announcement-edit-area').value.trim();
-            db.ref('announcement').set(newText).then(() => {
+            db.ref(ROOM_PREFIX + 'announcement').set(newText).then(() => {
                 toggleEditAnnouncement();
             });
         }
@@ -280,7 +298,7 @@
             if (name) {
                 const now = new Date();
                 const timeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                db.ref('presence/' + name).set({ timeStr: timeStr, timestamp: now.getTime() });
+                db.ref(ROOM_PREFIX + 'presence/' + name).set({ timeStr: timeStr, timestamp: now.getTime() });
             }
         }
 
@@ -291,7 +309,7 @@
         }
 
         function monitorPresence() {
-            db.ref('presence').on('value', snapshot => {
+            db.ref(ROOM_PREFIX + 'presence').on('value', snapshot => {
                 const listDiv = document.getElementById('presence-list');
                 listDiv.innerHTML = "";
                 let activeCount = 0;
@@ -344,7 +362,7 @@
         }
 
         function loadSidebarDates() {
-            db.ref('messages').once('value').then(snapshot => {
+            db.ref(ROOM_PREFIX + 'messages').once('value').then(snapshot => {
                 const dates = new Set(); 
                 snapshot.forEach(child => { if(child.val().date) dates.add(child.val().date); });
                 
@@ -432,7 +450,6 @@
                 quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
 
-            // 修改：去除模板字符串中的回车和缩进导致的空行
             msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + data.text;
 
             let pressTimer;
@@ -472,8 +489,8 @@
                 
                 document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
 
-                db.ref('messages').off();
-                db.ref('messages').once('value', snapshot => {
+                db.ref(ROOM_PREFIX + 'messages').off();
+                db.ref(ROOM_PREFIX + 'messages').once('value', snapshot => {
                     let foundCount = 0;
                     if (snapshot.exists()) { 
                         snapshot.forEach(child => { 
@@ -524,8 +541,8 @@
             const liveBtn = document.getElementById('live-chat-btn');
             if (liveBtn) liveBtn.classList.add('active');
 
-            db.ref('messages').off();
-            db.ref('messages').limitToLast(50).on('child_added', snapshot => { renderMessage(snapshot.val(), snapshot.key); });
+            db.ref(ROOM_PREFIX + 'messages').off();
+            db.ref(ROOM_PREFIX + 'messages').limitToLast(50).on('child_added', snapshot => { renderMessage(snapshot.val(), snapshot.key); });
             if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');
         }
 
@@ -541,8 +558,8 @@
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
             if (element) element.classList.add('active');
 
-            db.ref('messages').off();
-            db.ref('messages').orderByChild('date').equalTo(dateStr).once('value', snapshot => {
+            db.ref(ROOM_PREFIX + 'messages').off();
+            db.ref(ROOM_PREFIX + 'messages').orderByChild('date').equalTo(dateStr).once('value', snapshot => {
                 if (snapshot.exists()) { 
                     snapshot.forEach(child => { renderMessage(child.val(), child.key); }); 
                     
@@ -580,7 +597,7 @@
                 payload.reply = currentReplyTarget;
             }
 
-            db.ref('messages').push(payload).then(() => {
+            db.ref(ROOM_PREFIX + 'messages').push(payload).then(() => {
                 cancelReply(); 
             });
             
@@ -588,19 +605,15 @@
             document.getElementById('msg-input').focus();
         }
 
-                function handleEnter(e) { 
-            // 如果是手机端（屏幕宽度小于等于 600px），不拦截 Enter 键，让它正常换行
+        function handleEnter(e) { 
             if (window.innerWidth <= 600) {
                 return; 
             }
-            
-            // 如果是电脑端：按下 Enter 且没有按住 Shift 时，直接发送
             if (e.key === 'Enter' && !e.shiftKey) { 
                 e.preventDefault(); 
                 sendMessage(); 
             }
         }
-
     </script>
 </body>
 </html>
