@@ -96,15 +96,20 @@
         }
         #stealth-cover h1 { font-size: 24px; font-weight: normal; margin-bottom: 10px; }
         #stealth-cover p { font-size: 14px; color: #666; user-select: none; }
-        #secret-trigger { cursor: default; -webkit-tap-highlight-color: transparent; }
+        
+        /* 隐形触发区域：固定在屏幕左上角 */
+        #secret-trigger { 
+            position: absolute; top: 0; left: 0; width: 60px; height: 60px; 
+            z-index: 10000; cursor: default; -webkit-tap-highlight-color: transparent; 
+        }
     </style>
 </head>
 <body>
 
     <div id="stealth-cover">
+        <div id="secret-trigger"></div> <!-- 左上角的隐形方块 -->
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
-        <p id="secret-trigger" style="margin-top: 50px; opacity: 0.5;">server-status: offline.</p>
     </div>
 
     <div id="sidebar">
@@ -172,8 +177,29 @@
         }, 1000);
         // ----------------------------------------------------
 
+        // --- 10分钟自动锁屏及隐形解锁逻辑 ---
         let tapCount = 0;
         let tapTimer = null;
+        let idleTimer = null;
+        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10分钟 = 600,000毫秒
+
+        function lockScreen() {
+            document.getElementById('stealth-cover').style.display = 'flex';
+            sessionStorage.removeItem('unlocked');
+            tapCount = 0;
+        }
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            if (sessionStorage.getItem('unlocked') === 'true') {
+                idleTimer = setTimeout(lockScreen, IDLE_TIMEOUT);
+            }
+        }
+
+        // 监听用户活动，一旦有操作就重置计时器
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, { passive: true });
+        });
         
         document.getElementById('secret-trigger').addEventListener('click', function() {
             tapCount++;
@@ -181,21 +207,23 @@
             if (tapCount >= 3) {
                 document.getElementById('stealth-cover').style.display = 'none';
                 sessionStorage.setItem('unlocked', 'true');
+                resetIdleTimer(); // 刚解锁时启动一次计时
             }
             tapTimer = setTimeout(() => { tapCount = 0; }, 500);
         });
 
+        // 刷新页面或切出后台的判定
         if (sessionStorage.getItem('unlocked') === 'true') {
             document.getElementById('stealth-cover').style.display = 'none';
+            resetIdleTimer();
         }
 
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
-                document.getElementById('stealth-cover').style.display = 'flex';
-                sessionStorage.removeItem('unlocked');
-                tapCount = 0;
+                lockScreen(); // 只要离开网页(切后台)立刻锁住
             }
         });
+        // ----------------------------------------------------
 
         const firebaseConfig = {
             apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
@@ -450,7 +478,14 @@
                 quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
 
-            msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + data.text;
+            // 新增：自动识别图片链接并转为图片显示
+            let processedText = data.text;
+            const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
+            if (imgRegex.test(processedText)) {
+                processedText = processedText.replace(imgRegex, '<img src="$1" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 5px; display: block;">');
+            }
+
+            msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + processedText;
 
             let pressTimer;
             const safeText = data.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
@@ -605,29 +640,25 @@
             document.getElementById('msg-input').focus();
         }
 
-       function handleEnter(e) { 
-            // 1. 防止中文输入法冲突：如果正在打拼音（还没变成汉字），按什么都不干预
+        function handleEnter(e) { 
+            // 1. 防止中文输入法冲突
             if (e.isComposing || e.keyCode === 229) {
                 return; 
             }
 
-            // 2. 精准识别是不是真正的手机设备（而不是看窗口宽度）
+            // 2. 精准识别真正的手机设备
             const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            // 3. 如果按下的确实是 Enter 键
+            // 3. 拦截 Enter 键逻辑
             if (e.key === 'Enter') {
-                // 如果是真的手机设备，不拦截 Enter，让它正常换行
                 if (isMobileDevice) {
                     return; 
                 }
 
-                // 如果是电脑端（不管你把窗口缩得多小！）：
                 if (!e.shiftKey) { 
-                    // 没按 Shift，纯按 Enter -> 阻止自带的换行，直接发送消息
                     e.preventDefault(); 
                     sendMessage(); 
                 }
-                // 如果按了 Shift + Enter，代码不阻拦，文本框会自动换行
             }
         }
     </script>
