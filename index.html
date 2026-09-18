@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 彻底禁止手机浏览器自动缩放，保留14px精致排版 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>404 Not Found</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -196,9 +197,18 @@
             }
         }
 
-        // 监听用户活动，一旦有操作就重置计时器
+        // --- 性能优化：事件节流机制 ---
+        let idleThrottle = false;
+        function throttledReset() {
+            if (idleThrottle) return;
+            idleThrottle = true;
+            resetIdleTimer();
+            // 2秒内不管滑动多少次，只重新计时一次，彻底解决卡顿
+            setTimeout(() => { idleThrottle = false; }, 2000); 
+        }
+
         ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
-            document.addEventListener(evt, resetIdleTimer, { passive: true });
+            document.addEventListener(evt, throttledReset, { passive: true });
         });
         
         document.getElementById('secret-trigger').addEventListener('click', function() {
@@ -212,7 +222,7 @@
             tapTimer = setTimeout(() => { tapCount = 0; }, 500);
         });
 
-        // 刷新页面或切出后台的判定
+        // 刷新页面判定
         if (sessionStorage.getItem('unlocked') === 'true') {
             document.getElementById('stealth-cover').style.display = 'none';
             resetIdleTimer();
@@ -220,7 +230,7 @@
 
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
-                lockScreen(); // 只要离开网页(切后台)立刻锁住
+                lockScreen(); // 只要离开网页(切后台)立刻锁死
             }
         });
         // ----------------------------------------------------
@@ -242,6 +252,8 @@
         let lastDate = "";
         let currentView = "live"; 
         let currentReplyTarget = null; 
+        
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         window.onload = function() {
             const savedName = localStorage.getItem('chat_username');
@@ -254,6 +266,13 @@
             monitorAnnouncement(); 
             setTimeout(() => { loadSidebarDates(); }, 500);
             loadLiveChat();
+
+            // 智能设备判断，动态显示输入框提示
+            if (!isMobileDevice) {
+                document.getElementById('msg-input').placeholder = "按 Enter 发送，Shift+Enter 换行...";
+            } else {
+                document.getElementById('msg-input').placeholder = "输入你想说的话...";
+            }
         };
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
@@ -478,7 +497,7 @@
                 quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
 
-            // 新增：自动识别图片链接并转为图片显示
+            // --- 新增：自动解析图片链接机制 ---
             let processedText = data.text;
             const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
             if (imgRegex.test(processedText)) {
@@ -508,6 +527,16 @@
 
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            // --- 新增：防卡顿“扫地机器人”机制 ---
+            // 自动清理屏幕上多余的旧消息，限制在 150 个元素以内
+            if (chatBox.children.length > 150) {
+                for (let i = 0; i < 10; i++) {
+                    if (chatBox.firstElementChild) {
+                        chatBox.removeChild(chatBox.firstElementChild);
+                    }
+                }
+            }
         }
 
         function handleSearch(e) {
@@ -641,15 +670,12 @@
         }
 
         function handleEnter(e) { 
-            // 1. 防止中文输入法冲突
+            // 防止中文输入法冲突
             if (e.isComposing || e.keyCode === 229) {
                 return; 
             }
 
-            // 2. 精准识别真正的手机设备
-            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            // 3. 拦截 Enter 键逻辑
+            // 拦截 Enter 键逻辑：非移动端则回车发送
             if (e.key === 'Enter') {
                 if (isMobileDevice) {
                     return; 
