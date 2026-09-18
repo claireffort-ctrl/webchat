@@ -103,6 +103,24 @@
             position: absolute; top: 0; left: 0; width: 60px; height: 60px; 
             z-index: 10000; cursor: default; -webkit-tap-highlight-color: transparent; 
         }
+
+        /* --- 新增：长按操作弹窗菜单样式 --- */
+        #action-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.3); z-index: 10000; justify-content: center; align-items: center;
+        }
+        #action-menu {
+            background: #fff; width: 240px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2); animation: popIn 0.2s;
+        }
+        .action-btn {
+            padding: 16px; text-align: center; font-size: 15px; color: #333; cursor: pointer;
+            border-bottom: 1px solid #f0f0f0; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .action-btn:last-child { border-bottom: none; }
+        .action-btn:active { background: #f9f9f9; }
+        .action-btn.cancel-btn { color: #d93025; font-weight: bold; border-top: 5px solid #f0f2f5; }
+        @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
     </style>
 </head>
 <body>
@@ -111,6 +129,15 @@
         <div id="secret-trigger"></div> <!-- 左上角的隐形方块 -->
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
+    </div>
+
+    <!-- --- 新增：长按操作弹窗菜单结构 --- -->
+    <div id="action-overlay" onclick="closeActionMenu()">
+        <div id="action-menu" onclick="event.stopPropagation()">
+            <div class="action-btn" onclick="doCopy()">📄 复制内容</div>
+            <div class="action-btn" onclick="doReply()">💬 引用回复</div>
+            <div class="action-btn cancel-btn" onclick="closeActionMenu()">取消</div>
+        </div>
     </div>
 
     <div id="sidebar">
@@ -182,7 +209,7 @@
         let tapCount = 0;
         let tapTimer = null;
         let idleTimer = null;
-        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10分钟 = 600,000毫秒
+        const IDLE_TIMEOUT = 10 * 60 * 1000; // 10分钟
 
         function lockScreen() {
             document.getElementById('stealth-cover').style.display = 'flex';
@@ -203,7 +230,6 @@
             if (idleThrottle) return;
             idleThrottle = true;
             resetIdleTimer();
-            // 2秒内不管滑动多少次，只重新计时一次，彻底解决卡顿
             setTimeout(() => { idleThrottle = false; }, 2000); 
         }
 
@@ -217,7 +243,7 @@
             if (tapCount >= 3) {
                 document.getElementById('stealth-cover').style.display = 'none';
                 sessionStorage.setItem('unlocked', 'true');
-                resetIdleTimer(); // 刚解锁时启动一次计时
+                resetIdleTimer();
             }
             tapTimer = setTimeout(() => { tapCount = 0; }, 500);
         });
@@ -230,7 +256,7 @@
 
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
-                lockScreen(); // 只要离开网页(切后台)立刻锁死
+                lockScreen(); 
             }
         });
         // ----------------------------------------------------
@@ -456,11 +482,50 @@
             });
         }
 
-        function initiateReply(name, text) {
+        // --- 新增：长按菜单逻辑 ---
+        let activeMessageForAction = null;
+
+        function showActionMenu(name, text) {
+            activeMessageForAction = { name: name, text: text };
+            document.getElementById('action-overlay').style.display = 'flex';
+        }
+
+        function closeActionMenu() {
+            document.getElementById('action-overlay').style.display = 'none';
+            activeMessageForAction = null;
+        }
+
+        function doCopy() {
+            if (!activeMessageForAction) return;
+            const textToCopy = activeMessageForAction.text;
+            
+            // 兼容各种手机浏览器的万能复制方案
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand("Copy");
+            } catch (err) {}
+            textArea.remove();
+            
+            closeActionMenu();
+        }
+
+        function doReply() {
+            if (!activeMessageForAction) return;
             if (currentView !== "live") {
                 alert("只能在最新聊天模式下回复消息哦！");
+                closeActionMenu();
                 return;
             }
+            // 转换安全的文本格式以便显示在预览中
+            const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+            initiateReply(activeMessageForAction.name, safeText);
+            closeActionMenu();
+        }
+
+        function initiateReply(name, text) {
             currentReplyTarget = { name: name, text: text };
             document.getElementById('reply-preview').style.display = 'block';
             document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`;
@@ -497,7 +562,7 @@
                 quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
 
-            // --- 新增：自动解析图片链接机制 ---
+            // 自动解析图片链接机制
             let processedText = data.text;
             const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
             if (imgRegex.test(processedText)) {
@@ -507,11 +572,11 @@
             msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + processedText;
 
             let pressTimer;
-            const safeText = data.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             
+            // --- 修改：长按直接呼出选择菜单 ---
             const startPress = () => {
                 pressTimer = setTimeout(() => {
-                    initiateReply(data.name, safeText);
+                    showActionMenu(data.name, data.text);
                     if (navigator.vibrate) navigator.vibrate(50); 
                 }, 600); 
             };
@@ -528,8 +593,7 @@
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // --- 新增：防卡顿“扫地机器人”机制 ---
-            // 自动清理屏幕上多余的旧消息，限制在 150 个元素以内
+            // 防卡顿“扫地机器人”机制
             if (chatBox.children.length > 150) {
                 for (let i = 0; i < 10; i++) {
                     if (chatBox.firstElementChild) {
