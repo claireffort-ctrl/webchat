@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 彻底禁止手机浏览器自动缩放，保留14px精致排版 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>404 Not Found</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -994,10 +993,20 @@
         function doReply() {
             if (!activeMessageForAction) return;
             
+            // 1. 先把引用的目标信息提取出来存好，防止跳转时被清空
+            const targetName = activeMessageForAction.name;
             const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
-            initiateReply(activeMessageForAction.name, safeText);
             
+            // 2. 关闭操作菜单（会自动清空 activeMessageForAction）
             closeActionMenu();
+
+            // 3. 如果在历史记录页面，先跳转回最新聊天
+            if (currentView !== "live") {
+                loadLiveChat(); 
+            }
+            
+            // 4. 跳转完成后，稳稳地呼出引用预览框
+            initiateReply(targetName, safeText);
         }
 
         function initiateReply(name, text) {
@@ -1292,3 +1301,4 @@
     </script>
 </body>
 </html>
+
