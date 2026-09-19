@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 彻底禁止手机浏览器自动缩放，保留14px精致排版 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>404 Not Found</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1104,13 +1105,16 @@
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            const oldElements = chatBox.querySelectorAll('.message, .date-divider');
-            if (oldElements.length > 150) { 
-                for (let i = 0; i < 10; i++) { 
-                    if (oldElements[i] && oldElements[i].id !== 'wx-action-menu') {
-                        chatBox.removeChild(oldElements[i]); 
-                    }
-                } 
+            // --- 修复点：限定扫地机器人只在“最新聊天”工作，绝不误删历史记录 ---
+            if (currentView === "live") {
+                const oldElements = chatBox.querySelectorAll('.message, .date-divider');
+                if (oldElements.length > 150) { 
+                    for (let i = 0; i < 10; i++) { 
+                        if (oldElements[i] && oldElements[i].id !== 'wx-action-menu') {
+                            chatBox.removeChild(oldElements[i]); 
+                        }
+                    } 
+                }
             }
         }
 
@@ -1329,4 +1333,5 @@
     </script>
 </body>
 </html>
+
 
