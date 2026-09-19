@@ -871,7 +871,8 @@
         }
 
         function loadSidebarDates() {
-            db.ref(ROOM_PREFIX + 'messages').once('value').then(snapshot => {
+                        db.ref(ROOM_PREFIX + 'messages').limitToLast(2000).once('value').then(snapshot => {
+
                 const dates = new Set(); 
                 snapshot.forEach(child => { 
                     if(child.val().date) {
