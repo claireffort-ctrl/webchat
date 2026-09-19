@@ -870,64 +870,89 @@
             }, 500); 
         }
 
+        // --- 核心优化：彻底分离正文与目录（永不卡死机制） ---
         function loadSidebarDates() {
-                        db.ref(ROOM_PREFIX + 'messages').limitToLast(2000).once('value').then(snapshot => {
-
-                const dates = new Set(); 
-                snapshot.forEach(child => { 
-                    if(child.val().date) {
-                        dates.add(child.val().date); 
-                    }
-                });
-                
-                const dateListDiv = document.getElementById('date-list');
-                dateListDiv.innerHTML = '<div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()" style="padding-left:20px;">🔴 返回最新聊天</div>';
-                
-                const groupedDates = {};
-                Array.from(dates).reverse().forEach(dateStr => {
-                    const d = new Date(dateStr); 
-                    let monthGroup = !isNaN(d.getTime()) ? d.getFullYear() + "年" + (d.getMonth() + 1) + "月" : "未知记录";
-                    
-                    if (!groupedDates[monthGroup]) {
-                        groupedDates[monthGroup] = []; 
-                    }
-                    groupedDates[monthGroup].push(dateStr);
-                });
-                
-                for (const month in groupedDates) {
-                    const header = document.createElement('div'); 
-                    header.className = 'month-header'; 
-                    header.innerHTML = `<span>${month}</span><span class="icon">▶</span>`;
-                    
-                    const content = document.createElement('div'); 
-                    content.className = 'month-content'; 
-                    
-                    header.onclick = () => { 
-                        const isOpen = content.classList.contains('open'); 
-                        content.classList.toggle('open'); 
-                        header.querySelector('.icon').innerText = isOpen ? '▶' : '▼'; 
-                    };
-                    
-                    dateListDiv.appendChild(header); 
-                    dateListDiv.appendChild(content);
-                    
-                    groupedDates[month].forEach(dateStr => {
-                        const div = document.createElement('div'); 
-                        div.className = 'history-item'; 
-                        div.innerText = "📅 " + dateStr; 
-                        div.dataset.date = dateStr; 
-                        
-                        div.onclick = () => { 
-                            loadHistory(dateStr, div); 
-                            if(window.innerWidth <= 600) {
-                                toggleSidebar(); 
+            // 1. 先尝试只下载几十 KB 大小的“日期目录”
+            db.ref(ROOM_PREFIX + 'active_dates').once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    // 如果目录存在，直接瞬间生成侧边栏
+                    const dates = new Set(); 
+                    snapshot.forEach(child => { 
+                        dates.add(child.val()); 
+                    });
+                    renderSidebarUI(dates);
+                } else {
+                    // 2. 如果目录不存在（第一次运行这版代码），自动执行一次全量扫描，并把结果写进独立目录，以后再也不用扫了。
+                    db.ref(ROOM_PREFIX + 'messages').once('value').then(msgSnapshot => {
+                        const dates = new Set(); 
+                        msgSnapshot.forEach(child => { 
+                            if(child.val().date) {
+                                const d = child.val().date;
+                                dates.add(d); 
+                                // 顺手把扫描到的日期写进新的轻量级目录
+                                db.ref(ROOM_PREFIX + 'active_dates/' + d.replace(/[\/\.]/g, '-')).set(d);
                             }
-                        }; 
-                        
-                        content.appendChild(div);
+                        });
+                        renderSidebarUI(dates);
                     });
                 }
             });
+        }
+
+        function renderSidebarUI(dates) {
+            const dateListDiv = document.getElementById('date-list');
+            dateListDiv.innerHTML = '<div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()" style="padding-left:20px;">🔴 返回最新聊天</div>';
+            
+            const groupedDates = {};
+            
+            // 安全且精确的按时间倒序排列（越新的日子越在上面）
+            const sortedDates = Array.from(dates).sort((a, b) => {
+                return new Date(b.replace(/-/g, '/')).getTime() - new Date(a.replace(/-/g, '/')).getTime();
+            });
+            
+            sortedDates.forEach(dateStr => {
+                const d = new Date(dateStr.replace(/-/g, '/')); 
+                let monthGroup = !isNaN(d.getTime()) ? d.getFullYear() + "年" + (d.getMonth() + 1) + "月" : "未知记录";
+                
+                if (!groupedDates[monthGroup]) {
+                    groupedDates[monthGroup] = []; 
+                }
+                groupedDates[monthGroup].push(dateStr);
+            });
+            
+            for (const month in groupedDates) {
+                const header = document.createElement('div'); 
+                header.className = 'month-header'; 
+                header.innerHTML = `<span>${month}</span><span class="icon">▶</span>`;
+                
+                const content = document.createElement('div'); 
+                content.className = 'month-content'; 
+                
+                header.onclick = () => { 
+                    const isOpen = content.classList.contains('open'); 
+                    content.classList.toggle('open'); 
+                    header.querySelector('.icon').innerText = isOpen ? '▶' : '▼'; 
+                };
+                
+                dateListDiv.appendChild(header); 
+                dateListDiv.appendChild(content);
+                
+                groupedDates[month].forEach(dateStr => {
+                    const div = document.createElement('div'); 
+                    div.className = 'history-item'; 
+                    div.innerText = "📅 " + dateStr; 
+                    div.dataset.date = dateStr; 
+                    
+                    div.onclick = () => { 
+                        loadHistory(dateStr, div); 
+                        if(window.innerWidth <= 600) {
+                            toggleSidebar(); 
+                        }
+                    }; 
+                    
+                    content.appendChild(div);
+                });
+            }
         }
 
         // --- 长按逻辑 ---
@@ -994,19 +1019,15 @@
         function doReply() {
             if (!activeMessageForAction) return;
             
-            // 1. 先把引用的目标信息提取出来存好，防止跳转时被清空
             const targetName = activeMessageForAction.name;
             const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             
-            // 2. 关闭操作菜单（会自动清空 activeMessageForAction）
             closeActionMenu();
 
-            // 3. 如果在历史记录页面，先跳转回最新聊天
             if (currentView !== "live") {
                 loadLiveChat(); 
             }
             
-            // 4. 跳转完成后，稳稳地呼出引用预览框
             initiateReply(targetName, safeText);
         }
 
@@ -1083,17 +1104,14 @@
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-                        // --- 彻底修复：精准防卡顿扫地机器人 ---
-            // 直接抓取所有的聊天气泡和日期分割线，数量超过150就删掉最老的10个
             const oldElements = chatBox.querySelectorAll('.message, .date-divider');
-            if (oldElements.length > 150) {
-                for (let i = 0; i < 10; i++) {
-                    if (oldElements[i]) {
-                        chatBox.removeChild(oldElements[i]);
+            if (oldElements.length > 150) { 
+                for (let i = 0; i < 10; i++) { 
+                    if (oldElements[i] && oldElements[i].id !== 'wx-action-menu') {
+                        chatBox.removeChild(oldElements[i]); 
                     }
-                }
+                } 
             }
-
         }
 
         function handleSearch(e) {
@@ -1265,10 +1283,12 @@
             updatePresence(); 
             
             const now = new Date(); 
+            const dateStr = now.toLocaleDateString();
+            
             const payload = { 
                 name: name, 
                 text: text, 
-                date: now.toLocaleDateString(), 
+                date: dateStr, 
                 time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
             };
             
@@ -1278,6 +1298,9 @@
 
             db.ref(ROOM_PREFIX + 'messages').push(payload).then(() => { 
                 cancelReply(); 
+                
+                // 每次发消息时，顺手把今天的日期记到独立目录里
+                db.ref(ROOM_PREFIX + 'active_dates/' + dateStr.replace(/[\/\.]/g, '-')).set(dateStr);
                 
                 if (currentView !== "live") {
                     loadLiveChat(); 
