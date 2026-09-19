@@ -1082,13 +1082,17 @@
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            if (chatBox.children.length > 150) { 
-                for (let i = 0; i < 10; i++) { 
-                    if (chatBox.firstElementChild && chatBox.firstElementChild.id !== 'wx-action-menu') {
-                        chatBox.removeChild(chatBox.firstElementChild); 
+                        // --- 彻底修复：精准防卡顿扫地机器人 ---
+            // 直接抓取所有的聊天气泡和日期分割线，数量超过150就删掉最老的10个
+            const oldElements = chatBox.querySelectorAll('.message, .date-divider');
+            if (oldElements.length > 150) {
+                for (let i = 0; i < 10; i++) {
+                    if (oldElements[i]) {
+                        chatBox.removeChild(oldElements[i]);
                     }
-                } 
+                }
             }
+
         }
 
         function handleSearch(e) {
