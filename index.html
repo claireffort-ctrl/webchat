@@ -694,8 +694,13 @@
             resetIdleTimer(); 
         }
         
-        document.addEventListener("visibilitychange", function() { 
+       document.addEventListener("visibilitychange", function() { 
             if (document.hidden) lockScreen(); 
+        });
+        
+        // 新增的：只要网页失去焦点（如刚开始上划进入多任务、或下拉通知栏），瞬间立刻锁屏！
+        window.addEventListener("blur", function() {
+            lockScreen();
         });
 
         // --- Firebase 配置 ---
