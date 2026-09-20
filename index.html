@@ -1049,10 +1049,11 @@
         function showActionMenu(data, msgKey, msgElement) {
             closeActionMenu(); 
             
+            // 增加兜底容错，防止旧数据报错
             activeMessageForAction = { 
-                name: data.name, 
-                text: data.text,
-                date: data.date,
+                name: data.name || "未知", 
+                text: data.text || "",
+                date: data.date || "",
                 msgKey: msgKey 
             };
             activeMsgElement = msgElement;
@@ -1111,14 +1112,15 @@
         function doReply() {
             if (!activeMessageForAction) return;
             
-            const targetName = activeMessageForAction.name;
-            const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+            // 增加容错，防止旧格式的空消息报错导致“引用不了”
+            const targetName = activeMessageForAction.name || "未知";
+            const rawText = activeMessageForAction.text || "";
+            const safeText = rawText.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             
             closeActionMenu();
 
-            if (currentView !== "live") {
-                loadLiveChat(); 
-            }
+            // 移除了跳转逻辑，现在可以在历史记录页面直接原地打字回复
+            // 等用户真正点击“发送”时，系统才会自动将其带回最新聊天界面
             
             initiateReply(targetName, safeText, activeMessageForAction.date, activeMessageForAction.msgKey);
         }
