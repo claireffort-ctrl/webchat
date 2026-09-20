@@ -676,6 +676,7 @@
         let allActiveDatesSorted = []; 
         let earliestLoadedDate = "";
         let isLoadingHistory = false;
+        let isSwitchingView = false; // 🛡️ 新增：防乱跳安全锁
 
         // --- 防破解装甲 ---
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
@@ -962,6 +963,8 @@
 
         // --- 核心：滑动监听与向上翻页 ---
         function handleChatScroll() {
+            if (isSwitchingView) return; // 🛡️ 核心修复：正在切换页面清理屏幕时，无视一切滚动事件
+
             closeActionMenu();
             const chatBox = document.getElementById('chat-box');
             // 当滚动条触碰到顶部（允许5px的移动缓冲误差）时，加载更早记录
@@ -1237,6 +1240,8 @@
 
         // --- 加载最新聊天 ---
         function loadLiveChat() {
+            isSwitchingView = true; // 🔒 开启安全锁
+            
             currentView = "live"; lastDate = ""; closeActionMenu();
             const chatBox = document.getElementById('chat-box'); 
             Array.from(chatBox.children).forEach(child => { if(child.id !== 'wx-action-menu') { child.remove(); } });
@@ -1266,10 +1271,14 @@
                 if (targetDate !== todaySafe) {
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).once('value', oldSnap => {
                         oldSnap.forEach(child => { renderMessage(child.val(), child.key); });
+                        // 强制置底并解锁
+                        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
                         setupLiveListener(todaySafe);
+                        setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
                     });
                 } else {
                     setupLiveListener(targetDate);
+                    setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
                 }
             });
             
@@ -1286,6 +1295,8 @@
 
         // --- 加载历史抽屉 ---
         function loadHistory(dateStr, element, jumpMsgKey = null) {
+            isSwitchingView = true; // 🔒 开启安全锁
+            
             currentView = "history"; lastDate = ""; closeActionMenu();
             const chatBox = document.getElementById('chat-box'); 
             Array.from(chatBox.children).forEach(child => { if(child.id !== 'wx-action-menu') { child.remove(); } });
@@ -1302,6 +1313,7 @@
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).once('value', snapshot => {
                 if (snapshot.exists()) { 
                     snapshot.forEach(child => { renderMessage(child.val(), child.key); }); 
+                    
                     if (jumpMsgKey) { 
                         setTimeout(() => { 
                             const targetMsg = document.getElementById('msg-' + jumpMsgKey); 
@@ -1309,8 +1321,15 @@
                                 targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
                                 targetMsg.classList.add('highlight-target'); 
                             } 
+                            isSwitchingView = false; // 🔓 定位后解锁
                         }, 100); 
+                    } else {
+                        // 强制置底并解锁
+                        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
+                        setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
                     }
+                } else {
+                    isSwitchingView = false; // 🔓 没数据直接解锁
                 }
             });
         }
@@ -1358,3 +1377,4 @@
     </script>
 </body>
 </html>
+
