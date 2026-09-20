@@ -292,7 +292,6 @@
             flex-direction: column; 
             gap: 12px; 
             box-sizing: border-box; 
-            scroll-behavior: smooth; 
             position: relative;
         }
         
@@ -1047,10 +1046,15 @@
         let activeMessageForAction = null;
         let activeMsgElement = null;
 
-        function showActionMenu(name, text, msgElement) {
+        function showActionMenu(data, msgKey, msgElement) {
             closeActionMenu(); 
             
-            activeMessageForAction = { name: name, text: text };
+            activeMessageForAction = { 
+                name: data.name, 
+                text: data.text,
+                date: data.date,
+                msgKey: msgKey 
+            };
             activeMsgElement = msgElement;
             msgElement.classList.add('active-long-press'); 
 
@@ -1116,11 +1120,16 @@
                 loadLiveChat(); 
             }
             
-            initiateReply(targetName, safeText);
+            initiateReply(targetName, safeText, activeMessageForAction.date, activeMessageForAction.msgKey);
         }
 
-        function initiateReply(name, text) {
-            currentReplyTarget = { name: name, text: text };
+        function initiateReply(name, text, targetDate, targetMsgKey) {
+            currentReplyTarget = { 
+                name: name, 
+                text: text,
+                date: targetDate, 
+                msgKey: targetMsgKey 
+            };
             document.getElementById('reply-preview').style.display = 'block';
             document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`;
             document.getElementById('msg-input').focus();
@@ -1156,7 +1165,11 @@
             
             let quoteHtml = '';
             if (data.reply) {
-                quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
+                if (data.reply.date && data.reply.msgKey) {
+                    quoteHtml = `<div class="quote-block" style="cursor: pointer;" onclick="event.stopPropagation(); jumpToContext('${data.reply.date}', '${data.reply.msgKey}')" title="点击定位到原消息"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
+                } else {
+                    quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
+                }
             }
             
             let processedText = data.text;
@@ -1172,7 +1185,7 @@
             const startPress = (e) => {
                 e.stopPropagation();
                 pressTimer = setTimeout(() => { 
-                    showActionMenu(data.name, data.text, msgDiv); 
+                    showActionMenu(data, msgKey, msgDiv); 
                     if (navigator.vibrate) {
                         navigator.vibrate(50); 
                     }
@@ -1191,7 +1204,10 @@
             msgDiv.addEventListener('mouseleave', cancelPress);
 
             chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            chatBox.scrollTo({
+                top: chatBox.scrollHeight,
+                behavior: 'instant' 
+            });
 
             // 完美的精确定位扫地机器人（仅限 live 模式工作，保护历史记录完整）
             if (currentView === "live") {
@@ -1314,13 +1330,21 @@
             
             const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
             
-            // 永远抓取最活跃的一天作为最新聊天
-            db.ref(ROOM_PREFIX + 'active_dates').orderByKey().limitToLast(1).once('value', snap => {
+            // 抓取最活跃的一天作为最新聊天（已修复按数值真实日期排序）
+            db.ref(ROOM_PREFIX + 'active_dates').once('value', snap => {
                 let targetDate = todaySafe;
                 if (snap.exists()) {
+                    let allDates = [];
                     snap.forEach(child => {
-                        targetDate = child.key;
+                        allDates.push(child.key);
                     });
+                    
+                    // 使用真实日期进行数值排序，避免 "9" 大于 "10" 的字符串排序Bug
+                    allDates.sort((a, b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
+                    
+                    if (allDates.length > 0) {
+                        targetDate = allDates[allDates.length - 1]; // 取最后一条（最新日期）
+                    }
                 }
                 
                 if (targetDate !== todaySafe) {
@@ -1468,4 +1492,3 @@
     </script>
 </body>
 </html>
-
