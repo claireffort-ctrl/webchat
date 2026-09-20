@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 彻底禁止手机浏览器自动缩放，保留14px精致排版 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>404 Not Found</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -170,6 +171,7 @@
             color: #1890ff; 
         }
         
+        /* 标题加入了一键锁屏的手型提示和防选中文本 */
         h2 { 
             margin: 0; 
             color: #333; 
@@ -277,8 +279,7 @@
             display: table; 
             clear: both; 
         }
-        
-        /* 彻底去掉了电梯晕眩动画 */
+
         #chat-box { 
             width: 100%; 
             max-width: 600px; 
@@ -291,6 +292,7 @@
             flex-direction: column; 
             gap: 12px; 
             box-sizing: border-box; 
+            scroll-behavior: smooth; 
             position: relative;
         }
         
@@ -308,6 +310,7 @@
             transition: background-color 0.2s;
         }
         
+        /* 长按时的变暗反馈 */
         .message.active-long-press { 
             filter: brightness(0.9); 
         } 
@@ -319,7 +322,6 @@
             white-space: normal; 
         }
         
-        /* 引用框的跳转点击效果 */
         .quote-block { 
             font-size: 12px; 
             color: #666; 
@@ -332,11 +334,6 @@
             -webkit-line-clamp: 3; 
             -webkit-box-orient: vertical; 
             overflow: hidden; 
-            transition: 0.2s;
-        }
-        
-        .quote-block[onclick]:hover { 
-            background: rgba(0,0,0,0.08); 
         }
         
         .message.mine .quote-block { 
@@ -344,10 +341,6 @@
             border-left: none; 
             border-right: 3px solid #82d8a5; 
             text-align: left; 
-        }
-        
-        .message.mine .quote-block[onclick]:hover { 
-            background: rgba(255,255,255,0.6); 
         }
 
         .message.other { 
@@ -375,7 +368,7 @@
             margin: 15px 0; 
             white-space: normal; 
         }
-        
+
         .search-result-card { 
             background: #ffffff; 
             align-self: center; 
@@ -399,7 +392,7 @@
         .highlight-target { 
             animation: highlight-pulse 2s ease-out; 
         }
-        
+
         #reply-preview { 
             display: none; 
             width: 100%; 
@@ -433,7 +426,7 @@
         #cancel-reply:hover { 
             color: #f5222d; 
         }
-        
+
         #input-area { 
             width: 100%; 
             max-width: 600px; 
@@ -515,33 +508,33 @@
             max-width: 600px; 
             box-sizing: border-box;
         }
-        
-        @media (max-width: 600px) { 
+
+        @media (max-width: 600px) {
             #sidebar { 
                 position: absolute; 
                 height: 100%; 
                 box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-            } 
+            }
             #sidebar.collapsed { 
                 margin-left: -260px; 
                 box-shadow: none; 
-            } 
+            }
         }
-        
-        #stealth-cover { 
+
+        #stealth-cover {
             position: fixed; 
             top: 0; 
             left: 0; 
             width: 100vw; 
-            height: 100vh; 
+            height: 100vh;
             background-color: #ffffff; 
-            z-index: 9999; 
+            z-index: 9999;
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
-            align-items: center; 
+            align-items: center;
             color: #333; 
-            font-family: monospace; 
+            font-family: monospace;
         }
         
         #stealth-cover h1 { 
@@ -566,25 +559,26 @@
             cursor: default; 
             -webkit-tap-highlight-color: transparent; 
         }
-        
-        #wx-action-menu { 
+
+        /* 微信风小黑框菜单 */
+        #wx-action-menu {
             display: none; 
             position: absolute; 
             background: #4c4c4c; 
-            color: white; 
+            color: white;
             border-radius: 6px; 
             z-index: 1000; 
             font-size: 13px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             white-space: nowrap; 
-            user-select: none; 
+            user-select: none;
         }
         
-        .wx-action-item { 
+        .wx-action-item {
             display: inline-block; 
             padding: 10px 16px; 
             cursor: pointer; 
-            border-right: 1px solid #5a5a5a; 
+            border-right: 1px solid #5a5a5a;
         }
         
         .wx-action-item:last-child { 
@@ -595,48 +589,57 @@
             background: #3c3c3c; 
             border-radius: 6px; 
         }
-        
-        #wx-action-menu::after { 
+
+        /* 菜单下方的小箭头 */
+        #wx-action-menu::after {
             content: ''; 
             position: absolute; 
             bottom: -5px; 
             left: 50%; 
-            transform: translateX(-50%); 
+            transform: translateX(-50%);
             border-width: 5px 5px 0; 
             border-style: solid; 
-            border-color: #4c4c4c transparent transparent transparent; 
+            border-color: #4c4c4c transparent transparent transparent;
         }
         
-        #wx-action-menu.arrow-up::after { 
+        /* 菜单显示在下方时，箭头朝上 */
+        #wx-action-menu.arrow-up::after {
             top: -5px; 
-            bottom: auto; 
+            bottom: auto;
             border-width: 0 5px 5px; 
-            border-color: transparent transparent #4c4c4c transparent; 
+            border-color: transparent transparent #4c4c4c transparent;
         }
     </style>
 </head>
 <body>
+
+    <!-- 伪装盖板 -->
     <div id="stealth-cover">
         <div id="secret-trigger"></div>
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
     </div>
-    
+
+    <!-- 左侧日历栏 -->
     <div id="sidebar">
         <h3>Recents</h3>
         <div class="search-container">
             <input type="text" id="search-input" placeholder="🔍 搜索并回车..." onkeypress="handleSearch(event)">
         </div>
+        
         <div id="vip-presence-area">
             <h4>🕵️ 秘密探测仪</h4>
             <div id="presence-list">加载中...</div>
         </div>
+
         <div id="date-list"></div>
     </div>
-    
+
+    <!-- 主界面 -->
     <div id="main-area" onclick="closeActionMenu()">
         <div id="header-container">
             <button id="toggle-btn" onclick="event.stopPropagation(); toggleSidebar();">☰</button>
+            <!-- 点击此处即可一键瞬间锁屏 -->
             <h2 onclick="lockScreen()">blablaba</h2>
         </div>
         
@@ -651,10 +654,12 @@
                 <button id="save-announcement-btn" onclick="saveAnnouncement()">保存</button>
             </div>
         </div>
-        
+
         <div id="history-notice"></div>
         
+        <!-- 聊天主窗口 -->
         <div id="chat-box" onscroll="closeActionMenu()">
+            <!-- 微信风长按悬浮菜单 -->
             <div id="wx-action-menu" onclick="event.stopPropagation()">
                 <div class="wx-action-item" onclick="doCopy()">复制</div>
                 <div class="wx-action-item" onclick="doReply()">引用</div>
@@ -665,7 +670,7 @@
             <span id="reply-text-preview"></span>
             <span id="cancel-reply" onclick="cancelReply()">×</span>
         </div>
-        
+
         <div id="input-area" onclick="event.stopPropagation()">
             <input type="text" id="user-name" placeholder="名字" oninput="resortChat()">
             <textarea id="msg-input" placeholder="输入你想说的话..." onkeydown="handleEnter(event)" onfocus="closeActionMenu()"></textarea>
@@ -674,23 +679,28 @@
     </div>
 
     <script>
-        // --- 防御与锁屏 ---
+        // --- 核心防破解装甲 ---
         document.addEventListener('contextmenu', function(e) { 
             e.preventDefault(); 
         });
         
-        document.addEventListener('keydown', function(e) { 
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) || (e.ctrlKey && ['U','u'].includes(e.key))) { 
-                e.preventDefault(); 
-            } 
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) ||
+               (e.ctrlKey && ['U','u'].includes(e.key))) {
+                e.preventDefault();
+            }
         });
         
         setInterval(function() { 
             try { 
-                (function() { return false; }['constructor']('debugger')()); 
+                (function() { 
+                    return false; 
+                }['constructor']('debugger')()); 
             } catch (err) {} 
         }, 1000);
 
+        // --- 10分钟自动锁屏及隐形解锁 ---
         let tapCount = 0; 
         let tapTimer = null; 
         let idleTimer = null; 
@@ -714,22 +724,27 @@
             if (idleThrottle) return; 
             idleThrottle = true; 
             resetIdleTimer(); 
-            setTimeout(() => { idleThrottle = false; }, 2000); 
+            setTimeout(() => { 
+                idleThrottle = false; 
+            }, 2000); 
         }
         
         ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => { 
             document.addEventListener(evt, throttledReset, { passive: true }); 
         });
         
-        document.getElementById('secret-trigger').addEventListener('click', function() { 
+        // 左上角隐形大门：快速点击3次解锁
+        document.getElementById('secret-trigger').addEventListener('click', function() {
             tapCount++; 
-            clearTimeout(tapTimer); 
+            clearTimeout(tapTimer);
             if (tapCount >= 3) { 
                 document.getElementById('stealth-cover').style.display = 'none'; 
                 sessionStorage.setItem('unlocked', 'true'); 
                 resetIdleTimer(); 
-            } 
-            tapTimer = setTimeout(() => { tapCount = 0; }, 500); 
+            }
+            tapTimer = setTimeout(() => { 
+                tapCount = 0; 
+            }, 500);
         });
         
         if (sessionStorage.getItem('unlocked') === 'true') { 
@@ -737,19 +752,20 @@
             resetIdleTimer(); 
         }
         
+        // 网页切入后台时安全锁死
         document.addEventListener("visibilitychange", function() { 
             if (document.hidden) lockScreen(); 
         });
 
-        // --- Firebase 设置 ---
-        const firebaseConfig = { 
-            apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc", 
-            authDomain: "blabalaba-69dc2.firebaseapp.com", 
-            databaseURL: "https://blabalaba-69dc2-default-rtdb.firebaseio.com", 
-            projectId: "blabalaba-69dc2", 
-            storageBucket: "blabalaba-69dc2.firebasestorage.app", 
-            messagingSenderId: "393868557271", 
-            appId: "1:393868557271:web:0b27791b67248bcf9de992" 
+        // --- Firebase 配置 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0iOMZPM8CfJxLaeyXvdwfG_H5GMONCjc",
+            authDomain: "blabalaba-69dc2.firebaseapp.com",
+            databaseURL: "https://blabalaba-69dc2-default-rtdb.firebaseio.com",
+            projectId: "blabalaba-69dc2",
+            storageBucket: "blabalaba-69dc2.firebasestorage.app",
+            messagingSenderId: "393868557271",
+            appId: "1:393868557271:web:0b27791b67248bcf9de992"
         };
         firebase.initializeApp(firebaseConfig); 
         const db = firebase.database(); 
@@ -770,7 +786,10 @@
             checkVipStatus(); 
             monitorPresence(); 
             monitorAnnouncement(); 
-            setTimeout(() => { loadSidebarDates(); }, 500); 
+            
+            setTimeout(() => { 
+                loadSidebarDates(); 
+            }, 500); 
             
             if (!isMobileDevice) { 
                 document.getElementById('msg-input').placeholder = "按 Enter 发送，Shift+Enter 换行..."; 
@@ -782,95 +801,100 @@
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('collapsed'); 
         }
-        
-        function toggleAnnouncement(e) { 
-            if (e.target.tagName === 'BUTTON') return; 
-            const body = document.getElementById('announcement-body'); 
-            const icon = document.querySelector('.announcement-header .icon'); 
+
+        // --- 公告板逻辑 ---
+        function toggleAnnouncement(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            const body = document.getElementById('announcement-body');
+            const icon = document.querySelector('.announcement-header .icon');
             
-            if (body.style.display === 'none' || body.style.display === '') { 
+            if (body.style.display === 'none' || body.style.display === '') {
                 body.style.display = 'block'; 
-                icon.innerText = '▼'; 
-            } else { 
+                icon.innerText = '▼';
+            } else {
                 body.style.display = 'none'; 
-                icon.innerText = '▶'; 
-            } 
+                icon.innerText = '▶';
+            }
         }
-        
+
         function monitorAnnouncement() { 
             db.ref(ROOM_PREFIX + 'announcement').on('value', snapshot => { 
                 document.getElementById('announcement-content').innerText = snapshot.val() || "暂时没有 reminder 记录。"; 
             }); 
         }
-        
-        function toggleEditAnnouncement(e) { 
+
+        function toggleEditAnnouncement(e) {
             if (e) e.stopPropagation(); 
-            const body = document.getElementById('announcement-body'); 
-            if (body.style.display === 'none' || body.style.display === '') { 
-                toggleAnnouncement({target: body}); 
-            } 
-            const contentDiv = document.getElementById('announcement-content'); 
-            const editArea = document.getElementById('announcement-edit-area'); 
-            const saveBtn = document.getElementById('save-announcement-btn'); 
-            const editBtn = document.getElementById('edit-announcement-btn'); 
+            const body = document.getElementById('announcement-body');
             
-            if (editArea.style.display === 'none' || editArea.style.display === '') { 
+            if (body.style.display === 'none' || body.style.display === '') {
+                toggleAnnouncement({target: body});
+            }
+            
+            const contentDiv = document.getElementById('announcement-content'); 
+            const editArea = document.getElementById('announcement-edit-area');
+            const saveBtn = document.getElementById('save-announcement-btn'); 
+            const editBtn = document.getElementById('edit-announcement-btn');
+            
+            if (editArea.style.display === 'none' || editArea.style.display === '') {
                 contentDiv.style.display = 'none'; 
                 editArea.style.display = 'block'; 
                 saveBtn.style.display = 'block'; 
-                editBtn.innerText = '取消'; 
+                editBtn.innerText = '取消';
+                
                 db.ref(ROOM_PREFIX + 'announcement').once('value').then(snap => { 
                     editArea.value = snap.val() || ""; 
                     editArea.focus(); 
-                }); 
-            } else { 
+                });
+            } else {
                 contentDiv.style.display = 'block'; 
                 editArea.style.display = 'none'; 
                 saveBtn.style.display = 'none'; 
-                editBtn.innerText = '编辑'; 
-            } 
+                editBtn.innerText = '编辑';
+            }
         }
-        
+
         function saveAnnouncement() { 
-            const text = document.getElementById('announcement-edit-area').value.trim(); 
+            const text = document.getElementById('announcement-edit-area').value.trim();
             db.ref(ROOM_PREFIX + 'announcement').set(text).then(() => { 
                 toggleEditAnnouncement(); 
             }); 
         }
-        
-        function updatePresence() { 
-            const name = document.getElementById('user-name').value.trim(); 
+
+        // --- 秘密探测仪 ---
+        function updatePresence() {
+            const name = document.getElementById('user-name').value.trim();
             if (name) { 
                 const now = new Date(); 
                 db.ref(ROOM_PREFIX + 'presence/' + name).set({ 
                     timeStr: now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
                     timestamp: now.getTime() 
                 }); 
-            } 
+            }
         }
-        
+
         function checkVipStatus() { 
-            const name = document.getElementById('user-name').value.trim(); 
-            if (name === "me") { 
-                document.getElementById('vip-presence-area').style.display = 'block'; 
-            } else { 
-                document.getElementById('vip-presence-area').style.display = 'none'; 
-            } 
+            const name = document.getElementById('user-name').value.trim();
+            if (name === "me") {
+                document.getElementById('vip-presence-area').style.display = 'block';
+            } else {
+                document.getElementById('vip-presence-area').style.display = 'none';
+            }
         }
-        
-        function monitorPresence() { 
-            db.ref(ROOM_PREFIX + 'presence').on('value', snapshot => { 
+
+        function monitorPresence() {
+            db.ref(ROOM_PREFIX + 'presence').on('value', snapshot => {
                 const listDiv = document.getElementById('presence-list'); 
                 listDiv.innerHTML = ""; 
                 let activeCount = 0; 
-                const nowMs = new Date().getTime(); 
+                const nowMs = new Date().getTime();
                 
-                if (snapshot.exists()) { 
-                    snapshot.forEach(child => { 
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
                         const userName = child.key; 
-                        const data = child.val(); 
+                        const data = child.val();
                         let lastTimeStr = ""; 
-                        let lastTimestamp = 0; 
+                        let lastTimestamp = 0;
                         
                         if (typeof data === 'string') { 
                             lastTimeStr = data; 
@@ -878,43 +902,47 @@
                         } else if (data && data.timestamp) { 
                             lastTimeStr = data.timeStr; 
                             lastTimestamp = data.timestamp; 
-                        } 
+                        }
                         
-                        if(userName !== "me" && !isNaN(lastTimestamp) && (nowMs - lastTimestamp) <= 86400000) { 
+                        if(userName !== "me" && !isNaN(lastTimestamp) && (nowMs - lastTimestamp) <= 86400000) {
                             const div = document.createElement('div'); 
                             div.innerText = `👤 ${userName}: ${lastTimeStr}`; 
                             listDiv.appendChild(div); 
-                            activeCount++; 
-                        } 
-                    }); 
-                } 
+                            activeCount++;
+                        }
+                    });
+                }
                 
-                if (activeCount === 0) { 
-                    listDiv.innerHTML = "<div style='color:#aaa; font-style:italic;'>24小时内暂无活跃记录</div>"; 
-                } 
-            }); 
+                if (activeCount === 0) {
+                    listDiv.innerHTML = "<div style='color:#aaa; font-style:italic;'>24小时内暂无活跃记录</div>";
+                }
+            });
         }
-        
-        let typingTimer; 
+
+        let typingTimer;
         function resortChat() { 
             clearTimeout(typingTimer); 
             typingTimer = setTimeout(() => { 
                 localStorage.setItem('chat_username', document.getElementById('user-name').value.trim()); 
                 checkVipStatus(); 
                 updatePresence(); 
-                if (currentView === "live") { 
+                
+                if (currentView === "live") {
                     loadLiveChat(); 
-                } 
+                }
             }, 500); 
         }
 
-        // --- 抽屉平滑迁移 ---
+        // --- 核心优化：十年版“抽屉法则”数据自动迁移与分离 ---
         function loadSidebarDates() {
             db.ref(ROOM_PREFIX + 'active_dates').once('value').then(snapshot => {
                 if (snapshot.exists()) {
                     const dates = new Set(); 
-                    snapshot.forEach(child => dates.add(child.key));
+                    snapshot.forEach(child => {
+                        dates.add(child.key);
+                    });
                     
+                    // 检查是否还有漏网的旧版本扁平消息需要搬家
                     db.ref(ROOM_PREFIX + 'messages').limitToFirst(1).once('value', oldSnap => {
                         if (oldSnap.exists()) {
                             migrateOldMessages(dates);
@@ -929,10 +957,12 @@
             });
         }
 
+        // 终极平滑迁移：把旧的“大池子”自动整理成按天分类的“日历抽屉”
         function migrateOldMessages(datesSet) {
             db.ref(ROOM_PREFIX + 'messages').once('value', snap => {
                 let updates = {};
                 let count = 0;
+                
                 snap.forEach(child => {
                     let v = child.val();
                     if (v && v.date && typeof v === 'object') {
@@ -944,7 +974,9 @@
                         count++;
                     }
                 });
+                
                 if (count > 0) {
+                    // 搬家完成后，彻底销毁旧的拥堵池子
                     updates['messages'] = null; 
                     db.ref(ROOM_PREFIX).update(updates).then(() => {
                         renderSidebarUI(datesSet);
@@ -969,6 +1001,7 @@
             sortedDates.forEach(dateStr => {
                 const d = new Date(dateStr.replace(/-/g, '/')); 
                 let monthGroup = !isNaN(d.getTime()) ? d.getFullYear() + "年" + (d.getMonth() + 1) + "月" : "未知记录";
+                
                 if (!groupedDates[monthGroup]) {
                     groupedDates[monthGroup] = []; 
                 }
@@ -997,159 +1030,170 @@
                     div.className = 'history-item'; 
                     div.innerText = "📅 " + dateStr; 
                     div.dataset.date = dateStr; 
+                    
                     div.onclick = () => { 
                         loadHistory(dateStr, div); 
                         if(window.innerWidth <= 600) {
                             toggleSidebar(); 
                         }
                     }; 
+                    
                     content.appendChild(div);
                 });
             }
         }
 
-        let activeMessageForAction = null; 
+        // --- 微信风长按逻辑 ---
+        let activeMessageForAction = null;
         let activeMsgElement = null;
-        
-        function showActionMenu(name, text, msgElement, msgKey, date) { 
+
+        function showActionMenu(name, text, msgElement) {
             closeActionMenu(); 
-            activeMessageForAction = { name: name, text: text, msgKey: msgKey, date: date }; 
-            activeMsgElement = msgElement; 
+            
+            activeMessageForAction = { name: name, text: text };
+            activeMsgElement = msgElement;
             msgElement.classList.add('active-long-press'); 
+
+            const menu = document.getElementById('wx-action-menu');
+            const chatBox = document.getElementById('chat-box');
             
-            const menu = document.getElementById('wx-action-menu'); 
-            const chatBox = document.getElementById('chat-box'); 
-            menu.style.display = 'block'; 
-            menu.classList.remove('arrow-up'); 
+            menu.style.display = 'block';
+            menu.classList.remove('arrow-up');
             
-            let topPos = msgElement.offsetTop - menu.offsetHeight - 10; 
-            let leftPos = msgElement.offsetLeft + (msgElement.offsetWidth / 2) - (menu.offsetWidth / 2); 
-            
-            if (topPos < chatBox.scrollTop) { 
-                topPos = msgElement.offsetTop + msgElement.offsetHeight + 10; 
-                menu.classList.add('arrow-up'); 
-            } 
+            let topPos = msgElement.offsetTop - menu.offsetHeight - 10;
+            let leftPos = msgElement.offsetLeft + (msgElement.offsetWidth / 2) - (menu.offsetWidth / 2);
+
+            if (topPos < chatBox.scrollTop) {
+                topPos = msgElement.offsetTop + msgElement.offsetHeight + 10;
+                menu.classList.add('arrow-up');
+            }
             
             if (leftPos < 10) {
-                leftPos = 10; 
+                leftPos = 10;
             }
             if (leftPos + menu.offsetWidth > chatBox.clientWidth - 10) {
-                leftPos = chatBox.clientWidth - menu.offsetWidth - 10; 
+                leftPos = chatBox.clientWidth - menu.offsetWidth - 10;
             }
-            
-            menu.style.top = topPos + 'px'; 
-            menu.style.left = leftPos + 'px'; 
+
+            menu.style.top = topPos + 'px';
+            menu.style.left = leftPos + 'px';
         }
-        
-        function closeActionMenu() { 
-            document.getElementById('wx-action-menu').style.display = 'none'; 
+
+        function closeActionMenu() {
+            document.getElementById('wx-action-menu').style.display = 'none';
             if (activeMsgElement) {
-                activeMsgElement.classList.remove('active-long-press'); 
+                activeMsgElement.classList.remove('active-long-press');
             }
-            activeMessageForAction = null; 
-            activeMsgElement = null; 
+            activeMessageForAction = null;
+            activeMsgElement = null;
         }
-        
-        function doCopy() { 
-            if (!activeMessageForAction) return; 
+
+        function doCopy() {
+            if (!activeMessageForAction) return;
+            
             const textArea = document.createElement("textarea"); 
-            textArea.value = activeMessageForAction.text; 
+            textArea.value = activeMessageForAction.text;
             document.body.appendChild(textArea); 
-            textArea.select(); 
+            textArea.select();
+            
             try { 
                 document.execCommand("Copy"); 
             } catch (err) {} 
-            textArea.remove(); 
-            closeActionMenu(); 
+            
+            textArea.remove();
+            closeActionMenu();
         }
-        
-        function doReply() { 
-            if (!activeMessageForAction) return; 
-            const targetName = activeMessageForAction.name; 
-            const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' '); 
-            closeActionMenu(); 
+
+        function doReply() {
+            if (!activeMessageForAction) return;
+            
+            const targetName = activeMessageForAction.name;
+            const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+            
+            closeActionMenu();
+
             if (currentView !== "live") {
                 loadLiveChat(); 
             }
-            initiateReply(targetName, safeText, activeMessageForAction.msgKey, activeMessageForAction.date); 
-        }
-        
-        function initiateReply(name, text, msgKey, date) { 
-            currentReplyTarget = { name: name, text: text, msgKey: msgKey, date: date }; 
-            document.getElementById('reply-preview').style.display = 'block'; 
-            document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`; 
-            document.getElementById('msg-input').focus(); 
-        }
-        
-        function cancelReply() { 
-            currentReplyTarget = null; 
-            document.getElementById('reply-preview').style.display = 'none'; 
+            
+            initiateReply(targetName, safeText);
         }
 
+        function initiateReply(name, text) {
+            currentReplyTarget = { name: name, text: text };
+            document.getElementById('reply-preview').style.display = 'block';
+            document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`;
+            document.getElementById('msg-input').focus();
+        }
+
+        function cancelReply() {
+            currentReplyTarget = null;
+            document.getElementById('reply-preview').style.display = 'none';
+        }
+
+        // --- 渲染聊天气泡 ---
         function renderMessage(data, msgKey) {
             const chatBox = document.getElementById('chat-box');
             
-            if (data.date !== lastDate) { 
+            if (data.date !== lastDate) {
                 const dateDiv = document.createElement('div'); 
                 dateDiv.className = 'date-divider'; 
                 dateDiv.innerText = `--- ${data.date} ---`; 
                 chatBox.appendChild(dateDiv); 
-                lastDate = data.date; 
+                lastDate = data.date;
             }
             
             const msgDiv = document.createElement('div'); 
             msgDiv.className = 'message'; 
             msgDiv.id = 'msg-' + msgKey; 
-            const currentMyName = document.getElementById('user-name').value.trim(); 
             
-            if ((data.name || "").trim() === currentMyName && currentMyName !== "") {
+            const currentMyName = document.getElementById('user-name').value.trim();
+            if ((data.name || "").trim() === currentMyName && currentMyName !== "") { 
                 msgDiv.classList.add('mine'); 
-            } else {
-                msgDiv.classList.add('other');
+            } else { 
+                msgDiv.classList.add('other'); 
             }
             
-            let quoteHtml = ''; 
+            let quoteHtml = '';
             if (data.reply) {
-                let jumpAttr = '';
-                if (data.reply.date && data.reply.msgKey) {
-                    jumpAttr = `onclick="event.stopPropagation(); jumpToContext('${data.reply.date}', '${data.reply.msgKey}')" style="cursor:pointer;" title="点击跳转到原消息"`;
-                }
-                quoteHtml = `<div class="quote-block" ${jumpAttr}><b>${data.reply.name}：</b>${data.reply.text}</div>`;
+                quoteHtml = `<div class="quote-block"><b>${data.reply.name}：</b>${data.reply.text}</div>`;
             }
-
-            let processedText = data.text; 
-            const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi; 
+            
+            let processedText = data.text;
+            const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
             
             if (imgRegex.test(processedText)) {
                 processedText = processedText.replace(imgRegex, '<img src="$1" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 5px; display: block;">');
             }
-            
+
             msgDiv.innerHTML = quoteHtml + `<div class="meta"><span>${data.name} &nbsp; ${data.time}</span></div>` + processedText;
-            
-            let pressTimer; 
-            const startPress = (e) => { 
-                e.stopPropagation(); 
+
+            let pressTimer;
+            const startPress = (e) => {
+                e.stopPropagation();
                 pressTimer = setTimeout(() => { 
-                    showActionMenu(data.name, data.text, msgDiv, msgKey, data.date); 
+                    showActionMenu(data.name, data.text, msgDiv); 
                     if (navigator.vibrate) {
                         navigator.vibrate(50); 
                     }
                 }, 500); 
-            }; 
+            };
             
-            const cancelPress = () => { clearTimeout(pressTimer); };
-            msgDiv.addEventListener('touchstart', startPress, {passive: true}); 
-            msgDiv.addEventListener('touchend', cancelPress); 
-            msgDiv.addEventListener('touchmove', cancelPress); 
-            msgDiv.addEventListener('mousedown', startPress); 
-            msgDiv.addEventListener('mouseup', cancelPress); 
+            const cancelPress = () => { 
+                clearTimeout(pressTimer); 
+            };
+
+            msgDiv.addEventListener('touchstart', startPress, {passive: true});
+            msgDiv.addEventListener('touchend', cancelPress);
+            msgDiv.addEventListener('touchmove', cancelPress);
+            msgDiv.addEventListener('mousedown', startPress);
+            msgDiv.addEventListener('mouseup', cancelPress);
             msgDiv.addEventListener('mouseleave', cancelPress);
-            
-            chatBox.appendChild(msgDiv); 
-            
-            // 没有了平滑过渡，这句会自动瞬间吸附到底部
+
+            chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
+            // 完美的精确定位扫地机器人（仅限 live 模式工作，保护历史记录完整）
             if (currentView === "live") {
                 const oldElements = chatBox.querySelectorAll('.message, .date-divider');
                 if (oldElements.length > 150) { 
@@ -1162,6 +1206,7 @@
             }
         }
 
+        // --- 搜索功能 ---
         function handleSearch(e) {
             if (e.key === 'Enter') {
                 const keyword = document.getElementById('search-input').value.trim(); 
@@ -1173,7 +1218,8 @@
                 
                 currentView = "search"; 
                 lastDate = ""; 
-                const chatBox = document.getElementById('chat-box'); 
+                const chatBox = document.getElementById('chat-box');
+                
                 Array.from(chatBox.children).forEach(child => { 
                     if(child.id !== 'wx-action-menu') {
                         child.remove(); 
@@ -1182,26 +1228,37 @@
                 
                 const notice = document.getElementById('history-notice'); 
                 notice.innerText = `「搜索模式」: ${keyword}。在此处发送新消息，将自动带您回到最新聊天。`; 
-                notice.style.display = 'block'; 
-                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+                notice.style.display = 'block';
                 
+                document.querySelectorAll('.history-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+
+                // 搜索遍历所有抽屉
                 db.ref(ROOM_PREFIX + 'daily_messages').once('value', snapshot => {
                     let foundCount = 0;
+                    
                     if (snapshot.exists()) { 
                         snapshot.forEach(daySnap => {
                             daySnap.forEach(msgSnap => {
                                 const data = msgSnap.val();
+                                
                                 if (data.text && data.text.includes(keyword)) { 
                                     const msgDiv = document.createElement('div'); 
                                     msgDiv.className = 'message search-result-card';
                                     msgDiv.innerHTML = `<div class="meta">📅 ${data.date} &nbsp;|&nbsp; 👤 ${data.name} &nbsp;|&nbsp; 🕒 ${data.time}</div><div style="margin: 8px 0; color:#333;">${data.text}</div><div style="font-size:12px; color:#1890ff; font-weight:bold;">👉 点击前往上下文定位</div>`;
-                                    msgDiv.onclick = () => jumpToContext(data.date, msgSnap.key); 
+                                    
+                                    msgDiv.onclick = () => {
+                                        jumpToContext(data.date, msgSnap.key); 
+                                    };
+                                    
                                     chatBox.appendChild(msgDiv); 
                                     foundCount++; 
                                 }
                             });
                         }); 
                     }
+                    
                     if (foundCount === 0) {
                         chatBox.insertAdjacentHTML('beforeend', `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`);
                     }
@@ -1213,21 +1270,24 @@
             }
         }
 
-        function jumpToContext(dateStr, msgKey) { 
-            let targetEl = null; 
-            document.querySelectorAll('.history-item').forEach(el => { 
+        function jumpToContext(dateStr, msgKey) {
+            let targetEl = null;
+            document.querySelectorAll('.history-item').forEach(el => {
                 if (el.dataset.date === dateStr) { 
                     targetEl = el; 
                     const parentContent = el.closest('.month-content'); 
+                    
                     if (parentContent && !parentContent.classList.contains('open')) { 
                         parentContent.classList.add('open'); 
                         parentContent.previousElementSibling.querySelector('.icon').innerText = '▼'; 
                     } 
-                } 
-            }); 
-            loadHistory(dateStr, targetEl, msgKey); 
+                }
+            });
+            
+            loadHistory(dateStr, targetEl, msgKey);
         }
 
+        // --- 加载最新聊天 ---
         function loadLiveChat() {
             currentView = "live"; 
             lastDate = ""; 
@@ -1235,12 +1295,17 @@
             
             const chatBox = document.getElementById('chat-box'); 
             Array.from(chatBox.children).forEach(child => { 
-                if(child.id !== 'wx-action-menu') child.remove(); 
+                if(child.id !== 'wx-action-menu') {
+                    child.remove(); 
+                }
             });
             
             document.getElementById('search-input').value = ""; 
-            document.getElementById('history-notice').style.display = 'none'; 
-            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('history-notice').style.display = 'none';
+            
+            document.querySelectorAll('.history-item').forEach(el => {
+                el.classList.remove('active');
+            });
             
             const liveBtn = document.getElementById('live-chat-btn'); 
             if (liveBtn) {
@@ -1248,15 +1313,21 @@
             }
             
             const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
+            
+            // 永远抓取最活跃的一天作为最新聊天
             db.ref(ROOM_PREFIX + 'active_dates').orderByKey().limitToLast(1).once('value', snap => {
                 let targetDate = todaySafe;
                 if (snap.exists()) {
-                    snap.forEach(child => targetDate = child.key);
+                    snap.forEach(child => {
+                        targetDate = child.key;
+                    });
                 }
                 
                 if (targetDate !== todaySafe) {
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).limitToLast(50).once('value', oldSnap => {
-                        oldSnap.forEach(child => renderMessage(child.val(), child.key));
+                        oldSnap.forEach(child => {
+                            renderMessage(child.val(), child.key);
+                        });
                         setupLiveListener(todaySafe);
                     });
                 } else {
@@ -1277,6 +1348,7 @@
             });
         }
 
+        // --- 加载历史抽屉 ---
         function loadHistory(dateStr, element, jumpMsgKey = null) {
             currentView = "history"; 
             lastDate = ""; 
@@ -1290,32 +1362,40 @@
             });
             
             document.getElementById('search-input').value = ""; 
+            
             const notice = document.getElementById('history-notice'); 
             notice.innerText = "当前为「历史记录」模式。在此发送新消息或引用回复，将自动带您回到最新聊天。"; 
             notice.style.display = 'block';
             
-            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active')); 
+            document.querySelectorAll('.history-item').forEach(el => {
+                el.classList.remove('active');
+            }); 
+            
             if (element) {
                 element.classList.add('active');
             }
-            
+
+            // 直接拉开当天的专属抽屉，瞬间秒开
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).once('value', snapshot => {
                 if (snapshot.exists()) { 
-                    snapshot.forEach(child => renderMessage(child.val(), child.key)); 
+                    snapshot.forEach(child => { 
+                        renderMessage(child.val(), child.key); 
+                    }); 
                     
-                    if (jumpMsgKey) {
+                    if (jumpMsgKey) { 
                         setTimeout(() => { 
                             const targetMsg = document.getElementById('msg-' + jumpMsgKey); 
                             if (targetMsg) { 
                                 targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
                                 targetMsg.classList.add('highlight-target'); 
                             } 
-                        }, 100);
+                        }, 100); 
                     }
                 }
             });
         }
 
+        // --- 发送消息（带有防爆库安全门） ---
         function sendMessage() {
             const name = document.getElementById('user-name').value.trim(); 
             const text = document.getElementById('msg-input').value.trim();
@@ -1324,7 +1404,8 @@
                 alert("名字和消息都不能为空哦！"); 
                 return; 
             }
-            
+
+            // 🚫 拦截 Base64 超长图片乱码，防止撑爆数据库免费容量
             if (text.includes("data:image/") && text.length > 500) {
                 alert("⚠️ 警告：请不要直接粘贴图片！\n\n为了节省宝贵的数据库空间，请先将图片上传到外部免费图床（如 Postimages），然后再把直接链接粘贴过来。");
                 document.getElementById('msg-input').value = ""; 
@@ -1336,12 +1417,19 @@
             
             const now = new Date(); 
             const safeDate = now.toLocaleDateString().replace(/[\/\.]/g, '-');
-            const payload = { name: name, text: text, date: safeDate, time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+            
+            const payload = { 
+                name: name, 
+                text: text, 
+                date: safeDate, 
+                time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+            };
             
             if (currentReplyTarget) {
                 payload.reply = currentReplyTarget;
             }
 
+            // 如果你们熬夜跨过了晚上12点，系统自动切换监听新的抽屉
             if (currentView === "live" && currentLiveDate !== safeDate) {
                 db.ref(ROOM_PREFIX + 'daily_messages/' + currentLiveDate).off();
                 setupLiveListener(safeDate);
@@ -1349,7 +1437,10 @@
 
             db.ref(ROOM_PREFIX + 'daily_messages/' + safeDate).push(payload).then(() => { 
                 cancelReply(); 
+                
+                // 确保活跃目录表里有今天
                 db.ref(ROOM_PREFIX + 'active_dates/' + safeDate).set(safeDate);
+                
                 if (currentView !== "live") {
                     loadLiveChat(); 
                 }
@@ -1372,7 +1463,7 @@
                     e.preventDefault(); 
                     sendMessage(); 
                 } 
-            } 
+            }
         }
     </script>
 </body>
