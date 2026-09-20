@@ -631,7 +631,6 @@
     </div>
 
     <!-- 主界面 -->
-    <!-- 更换为 handleChatScroll 以支持向下滑动加载 -->
     <div id="main-area" onclick="closeActionMenu()">
         <div id="header-container">
             <button id="toggle-btn" onclick="event.stopPropagation(); toggleSidebar();">☰</button>
@@ -872,20 +871,35 @@
             }, 500); 
         }
 
+        // 🛠️ 终极自我修复机制：直接扫描真实的聊天抽屉 (daily_messages)，防止目录索引丢失
         function loadSidebarDates() {
-            db.ref(ROOM_PREFIX + 'active_dates').once('value').then(snapshot => {
+            db.ref(ROOM_PREFIX + 'daily_messages').once('value').then(snapshot => {
+                const dates = new Set();
                 if (snapshot.exists()) {
-                    const dates = new Set(); 
-                    snapshot.forEach(child => dates.add(child.key));
-                    
-                    // 全局记录所有日期并排序，为无缝向上翻页做准备
-                    allActiveDatesSorted = Array.from(dates).sort((a, b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
-                    
-                    db.ref(ROOM_PREFIX + 'messages').limitToFirst(1).once('value', oldSnap => {
-                        if (oldSnap.exists()) { migrateOldMessages(dates); } 
-                        else { renderSidebarUI(dates); loadLiveChat(); }
+                    snapshot.forEach(child => {
+                        dates.add(child.key);
                     });
-                } else { migrateOldMessages(new Set()); }
+                }
+
+                // 把从真实抽屉里找到的所有日期，重新登记修复到 active_dates 索引表里
+                if (dates.size > 0) {
+                    const updates = {};
+                    dates.forEach(d => { updates[d] = d; });
+                    db.ref(ROOM_PREFIX + 'active_dates').update(updates);
+                }
+                
+                // 全局记录所有日期并排序，为无缝向上翻页做准备
+                allActiveDatesSorted = Array.from(dates).sort((a, b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
+                
+                // 检查是否还有漏网的老旧扁平数据没搬家
+                db.ref(ROOM_PREFIX + 'messages').limitToFirst(1).once('value', oldSnap => {
+                    if (oldSnap.exists()) { 
+                        migrateOldMessages(dates); 
+                    } else { 
+                        renderSidebarUI(dates); 
+                        loadLiveChat(); 
+                    }
+                });
             });
         }
 
@@ -1111,13 +1125,18 @@
 
         function doReply() {
             if (!activeMessageForAction) return;
+            
+            // 1. 在关闭菜单前，先把所有的关键数据都提取并存好
             const targetName = activeMessageForAction.name || "未知";
             const rawText = activeMessageForAction.text || "";
             const safeText = rawText.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             const targetDate = activeMessageForAction.date;
             const targetMsgKey = activeMessageForAction.msgKey;
             
+            // 2. 数据安全拿到了，这时候再关闭菜单（清空临时数据）
             closeActionMenu();
+
+            // 3. 完美发起引用
             initiateReply(targetName, safeText, targetDate, targetMsgKey);
         }
 
@@ -1160,8 +1179,6 @@
             if (isNearBottom || (currentView === "history" && !document.querySelector('.highlight-target'))) {
                 chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
             }
-            
-            // 注意：扫地机器人代码已经被彻底删除，历史记录不再会被限制删除。
         }
 
         // --- 搜索功能 ---
@@ -1246,7 +1263,6 @@
                 
                 earliestLoadedDate = targetDate; // 标记当前第一层的底座日期
                 
-                // 去掉了之前的 .limitToLast(50) 限制，直接给你加载全部！
                 if (targetDate !== todaySafe) {
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).once('value', oldSnap => {
                         oldSnap.forEach(child => { renderMessage(child.val(), child.key); });
@@ -1263,7 +1279,6 @@
         function setupLiveListener(dateStr) {
             currentLiveDate = dateStr;
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).off();
-            // 去掉限制，让你能直接在这个池子里滚动查看这一天的全部
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).on('child_added', snapshot => { 
                 renderMessage(snapshot.val(), snapshot.key); 
             });
@@ -1343,4 +1358,3 @@
     </script>
 </body>
 </html>
-
