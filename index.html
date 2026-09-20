@@ -676,7 +676,7 @@
         let allActiveDatesSorted = []; 
         let earliestLoadedDate = "";
         let isLoadingHistory = false;
-        let isSwitchingView = false; // 🛡️ 新增：防乱跳安全锁
+        let isSwitchingView = false; // 🛡️ 防乱跳安全锁
 
         // --- 防破解装甲 ---
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
@@ -766,7 +766,9 @@
             monitorPresence(); 
             monitorAnnouncement(); 
             
-            setTimeout(() => { loadSidebarDates(); }, 500); 
+            // 🚀 核心优化：进门瞬间秒开今天的聊天，侧边栏目录改成在后台异步加载
+            loadLiveChat(); 
+            setTimeout(() => { loadSidebarDatesInBackground(); }, 300); 
             
             if (!isMobileDevice) { 
                 document.getElementById('msg-input').placeholder = "按 Enter 发送，Shift+Enter 换行..."; 
@@ -872,8 +874,8 @@
             }, 500); 
         }
 
-        // 🛠️ 终极自我修复机制：直接扫描真实的聊天抽屉 (daily_messages)，防止目录索引丢失
-        function loadSidebarDates() {
+        // 📂 后台静默加载侧边栏目录（不卡主界面秒进）
+        function loadSidebarDatesInBackground() {
             db.ref(ROOM_PREFIX + 'daily_messages').once('value').then(snapshot => {
                 const dates = new Set();
                 if (snapshot.exists()) {
@@ -882,29 +884,25 @@
                     });
                 }
 
-                // 把从真实抽屉里找到的所有日期，重新登记修复到 active_dates 索引表里
                 if (dates.size > 0) {
                     const updates = {};
                     dates.forEach(d => { updates[d] = d; });
                     db.ref(ROOM_PREFIX + 'active_dates').update(updates);
                 }
                 
-                // 全局记录所有日期并排序，为无缝向上翻页做准备
                 allActiveDatesSorted = Array.from(dates).sort((a, b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
                 
-                // 检查是否还有漏网的老旧扁平数据没搬家
                 db.ref(ROOM_PREFIX + 'messages').limitToFirst(1).once('value', oldSnap => {
                     if (oldSnap.exists()) { 
-                        migrateOldMessages(dates); 
+                        migrateOldMessagesSilently(dates); 
                     } else { 
                         renderSidebarUI(dates); 
-                        loadLiveChat(); 
                     }
                 });
             });
         }
 
-        function migrateOldMessages(datesSet) {
+        function migrateOldMessagesSilently(datesSet) {
             db.ref(ROOM_PREFIX + 'messages').once('value', snap => {
                 let updates = {}; let count = 0;
                 snap.forEach(child => {
@@ -920,9 +918,9 @@
                     updates['messages'] = null; 
                     db.ref(ROOM_PREFIX).update(updates).then(() => {
                         allActiveDatesSorted = Array.from(datesSet).sort((a, b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
-                        renderSidebarUI(datesSet); loadLiveChat();
+                        renderSidebarUI(datesSet);
                     });
-                } else { renderSidebarUI(datesSet); loadLiveChat(); }
+                } else { renderSidebarUI(datesSet); }
             });
         }
 
@@ -963,11 +961,10 @@
 
         // --- 核心：滑动监听与向上翻页 ---
         function handleChatScroll() {
-            if (isSwitchingView) return; // 🛡️ 核心修复：正在切换页面清理屏幕时，无视一切滚动事件
+            if (isSwitchingView) return; // 🛡️ 切换页面时屏蔽滚动误判
 
             closeActionMenu();
             const chatBox = document.getElementById('chat-box');
-            // 当滚动条触碰到顶部（允许5px的移动缓冲误差）时，加载更早记录
             if (chatBox.scrollTop <= 5 && !isLoadingHistory && currentView !== "search") {
                 loadOlderMessages();
             }
@@ -976,7 +973,6 @@
         function loadOlderMessages() {
             if (!earliestLoadedDate || allActiveDatesSorted.length === 0) return;
             
-            // 找出比目前屏幕上“最早那一天”还要早一天的日期
             const currentIndex = allActiveDatesSorted.indexOf(earliestLoadedDate);
             if (currentIndex > 0) { 
                 const previousDate = allActiveDatesSorted[currentIndex - 1]; 
@@ -999,24 +995,20 @@
                         if (snapshot.exists()) {
                             const fragment = document.createDocumentFragment();
                             
-                            // 加上前一天的日期分割线
                             const dateDiv = document.createElement('div'); 
                             dateDiv.className = 'date-divider'; 
                             dateDiv.innerText = `--- ${previousDate} ---`; 
                             fragment.appendChild(dateDiv);
 
                             snapshot.forEach(child => {
-                                // 避免重复加载
                                 if (!document.getElementById('msg-' + child.key)) {
                                     fragment.appendChild(createMessageNode(child.val(), child.key));
                                 }
                             });
                             
-                            // 拼接到聊天框的最上面
                             chatBox.insertBefore(fragment, chatBox.firstChild);
                             earliestLoadedDate = previousDate;
                             
-                            // 巧妙调整滚动条位置，使得画面停留在刚拉下来的位置，不会乱跳
                             const newScrollHeight = chatBox.scrollHeight;
                             chatBox.scrollTop = newScrollHeight - oldScrollHeight;
                         }
@@ -1026,7 +1018,7 @@
             }
         }
 
-        // --- 提取：纯净的气泡生成器（为了向上拼装复用） ---
+        // --- 纯净气泡生成器 ---
         function createMessageNode(data, msgKey) {
             const msgDiv = document.createElement('div'); 
             msgDiv.className = 'message'; 
@@ -1129,17 +1121,13 @@
         function doReply() {
             if (!activeMessageForAction) return;
             
-            // 1. 在关闭菜单前，先把所有的关键数据都提取并存好
             const targetName = activeMessageForAction.name || "未知";
             const rawText = activeMessageForAction.text || "";
             const safeText = rawText.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
             const targetDate = activeMessageForAction.date;
             const targetMsgKey = activeMessageForAction.msgKey;
             
-            // 2. 数据安全拿到了，这时候再关闭菜单（清空临时数据）
             closeActionMenu();
-
-            // 3. 完美发起引用
             initiateReply(targetName, safeText, targetDate, targetMsgKey);
         }
 
@@ -1159,7 +1147,6 @@
         function renderMessage(data, msgKey) {
             const chatBox = document.getElementById('chat-box');
             
-            // 为了安全起见，防止 Firebase 重复抛出节点
             if (document.getElementById('msg-' + msgKey)) return;
 
             if (data.date !== lastDate) {
@@ -1171,14 +1158,10 @@
             }
             
             const msgDiv = createMessageNode(data, msgKey);
-            
-            // 检查你目前是否在聊天框的最底部（差值小于 200 像素就算在底部）
             const isNearBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 200;
 
             chatBox.appendChild(msgDiv);
             
-            // 优化：只有当你在看最新消息，或者刚进来的那一刻，才会滚到底部。
-            // 如果你此时已经往上滑去回顾历史了，就不会强行把你拽下来！
             if (isNearBottom || (currentView === "history" && !document.querySelector('.highlight-target'))) {
                 chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
             }
@@ -1266,19 +1249,18 @@
                     }
                 }
                 
-                earliestLoadedDate = targetDate; // 标记当前第一层的底座日期
+                earliestLoadedDate = targetDate;
                 
                 if (targetDate !== todaySafe) {
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).once('value', oldSnap => {
                         oldSnap.forEach(child => { renderMessage(child.val(), child.key); });
-                        // 强制置底并解锁
                         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
                         setupLiveListener(todaySafe);
-                        setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
+                        setTimeout(() => { isSwitchingView = false; }, 300);
                     });
                 } else {
                     setupLiveListener(targetDate);
-                    setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
+                    setTimeout(() => { isSwitchingView = false; }, 300);
                 }
             });
             
@@ -1308,7 +1290,7 @@
             document.querySelectorAll('.history-item').forEach(el => { el.classList.remove('active'); }); 
             if (element) { element.classList.add('active'); }
 
-            earliestLoadedDate = dateStr; // 标记这是目前最上面的日期，之后可以继续往上翻
+            earliestLoadedDate = dateStr;
 
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).once('value', snapshot => {
                 if (snapshot.exists()) { 
@@ -1321,15 +1303,14 @@
                                 targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
                                 targetMsg.classList.add('highlight-target'); 
                             } 
-                            isSwitchingView = false; // 🔓 定位后解锁
+                            isSwitchingView = false;
                         }, 100); 
                     } else {
-                        // 强制置底并解锁
                         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'instant' });
-                        setTimeout(() => { isSwitchingView = false; }, 300); // 🔓 延迟解锁
+                        setTimeout(() => { isSwitchingView = false; }, 300);
                     }
                 } else {
-                    isSwitchingView = false; // 🔓 没数据直接解锁
+                    isSwitchingView = false;
                 }
             });
         }
@@ -1377,4 +1358,5 @@
     </script>
 </body>
 </html>
+
 
