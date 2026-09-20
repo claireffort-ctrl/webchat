@@ -28,10 +28,12 @@
             flex-shrink: 0; 
             z-index: 10; 
         }
+        
         #sidebar.collapsed { 
             margin-left: -250px; 
             border-right: none; 
         }
+        
         #sidebar h3 { 
             padding: 20px 20px 10px 20px; 
             margin: 0; 
@@ -44,6 +46,7 @@
             padding: 0 15px 15px 15px; 
             border-bottom: 1px solid #eee; 
         }
+        
         .search-container input { 
             width: 100%; 
             padding: 8px; 
@@ -53,6 +56,7 @@
             outline: none; 
             background: #f9f9f9; 
         }
+        
         .search-container input:focus { 
             border-color: #1890ff; 
             background: white; 
@@ -63,6 +67,7 @@
             background-color: #fff9f9; 
             border-bottom: 1px solid #eee; 
         }
+        
         #vip-presence-area h4 { 
             margin: 0; 
             padding: 15px 20px 5px 20px; 
@@ -70,6 +75,7 @@
             color: #d93025; 
             font-weight: bold; 
         }
+        
         #presence-list { 
             padding: 5px 20px 15px 20px; 
             font-size: 12px; 
@@ -94,13 +100,16 @@
             justify-content: space-between; 
             user-select: none; 
         }
+        
         .month-header:hover { 
             background-color: #eaeaea; 
         }
+        
         .month-content { 
             display: none; 
             flex-direction: column; 
         }
+        
         .month-content.open { 
             display: flex; 
         }
@@ -113,9 +122,11 @@
             font-size: 14px; 
             color: #444; 
         }
+        
         .history-item:hover { 
             background-color: #f0f7ff; 
         }
+        
         .history-item.active { 
             background-color: #e6f7ff; 
             font-weight: bold; 
@@ -133,6 +144,7 @@
             position: relative; 
             min-width: 0; 
         }
+        
         #header-container { 
             width: 100%; 
             max-width: 600px; 
@@ -142,6 +154,7 @@
             position: relative; 
             margin-bottom: 15px; 
         }
+        
         #toggle-btn { 
             position: absolute; 
             left: 0; 
@@ -153,13 +166,18 @@
             padding: 5px; 
             transition: 0.2s; 
         }
+        
         #toggle-btn:hover { 
             color: #1890ff; 
         }
+        
+        /* 标题加入了一键锁屏的手型提示和防选中文本 */
         h2 { 
             margin: 0; 
             color: #333; 
             font-size: 20px; 
+            cursor: pointer; 
+            user-select: none; 
         }
 
         #announcement-container { 
@@ -174,6 +192,7 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.03); 
             flex-shrink: 0; 
         }
+        
         .announcement-header { 
             display: flex; 
             justify-content: space-between; 
@@ -187,14 +206,17 @@
             transition: background 0.2s; 
             border-radius: 8px;
         }
+        
         .announcement-header:hover { 
             background-color: #f9f9f9; 
         }
+        
         .announcement-header.open { 
             border-bottom-color: #eee; 
             border-bottom-left-radius: 0; 
             border-bottom-right-radius: 0; 
         }
+        
         .announcement-header button { 
             background: none; 
             border: none; 
@@ -205,12 +227,15 @@
             border-radius: 4px; 
             transition: 0.2s; 
         }
+        
         .announcement-header button:hover { 
             background: #e6f7ff; 
         }
+        
         #announcement-body { 
             padding: 12px 15px; 
         }
+        
         #announcement-content { 
             font-size: 13px; 
             line-height: 1.5; 
@@ -218,6 +243,7 @@
             word-break: break-all; 
             color: #555; 
         }
+        
         #announcement-edit-area { 
             width: 100%; 
             box-sizing: border-box; 
@@ -234,6 +260,7 @@
             font-size: 13px; 
             color: #333; 
         }
+        
         #save-announcement-btn { 
             background: #1890ff; 
             color: white; 
@@ -246,6 +273,7 @@
             float: right; 
             font-weight: bold; 
         }
+        
         #announcement-body::after { 
             content: ""; 
             display: table; 
@@ -281,9 +309,12 @@
             -webkit-user-select: none; 
             transition: background-color 0.2s;
         }
+        
+        /* 长按时的变暗反馈 */
         .message.active-long-press { 
             filter: brightness(0.9); 
         } 
+        
         .meta { 
             font-size: 11px; 
             color: #888; 
@@ -304,6 +335,7 @@
             -webkit-box-orient: vertical; 
             overflow: hidden; 
         }
+        
         .message.mine .quote-block { 
             background: rgba(255,255,255,0.4); 
             border-left: none; 
@@ -317,15 +349,18 @@
             border-top-left-radius: 2px; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
         }
+        
         .message.mine { 
             background: #d5f5e3; 
             align-self: flex-end; 
             border-top-right-radius: 2px; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
         }
+        
         .message.mine .meta { 
             text-align: right; 
         }
+        
         .date-divider { 
             text-align: center; 
             font-size: 12px; 
@@ -343,14 +378,17 @@
             transition: 0.2s; 
             box-shadow: 0 2px 8px rgba(24,144,255,0.15); 
         }
+        
         .search-result-card:hover { 
             transform: translateY(-2px); 
             box-shadow: 0 4px 12px rgba(24,144,255,0.25); 
         }
+        
         @keyframes highlight-pulse { 
             0% { background-color: #ffe58f; transform: scale(1.02); } 
             100% { background-color: inherit; transform: scale(1); } 
         }
+        
         .highlight-target { 
             animation: highlight-pulse 2s ease-out; 
         }
@@ -373,6 +411,7 @@
             text-overflow: ellipsis; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
         }
+        
         #cancel-reply { 
             position: absolute; 
             right: 10px; 
@@ -383,6 +422,7 @@
             color: #999; 
             font-weight: bold; 
         }
+        
         #cancel-reply:hover { 
             color: #f5222d; 
         }
@@ -400,6 +440,7 @@
             box-sizing: border-box; 
             align-items: flex-end; 
         }
+        
         #user-name { 
             width: 80px; 
             padding: 12px 10px; 
@@ -426,6 +467,7 @@
             line-height: 1.4; 
             overflow-y: auto; 
         }
+        
         #msg-input:focus, #user-name:focus { 
             border-color: #1890ff; 
             background: white; 
@@ -443,13 +485,16 @@
             height: 42px; 
             box-sizing: border-box; 
         }
+        
         button.send-action:hover { 
             background: #096dd9; 
         }
+        
         button.send-action:disabled { 
             background: #ccc; 
             cursor: not-allowed; 
         }
+        
         #history-notice { 
             display: none; 
             color: #d93025; 
@@ -491,11 +536,13 @@
             color: #333; 
             font-family: monospace;
         }
+        
         #stealth-cover h1 { 
             font-size: 24px; 
             font-weight: normal; 
             margin-bottom: 10px; 
         }
+        
         #stealth-cover p { 
             font-size: 14px; 
             color: #666; 
@@ -513,6 +560,7 @@
             -webkit-tap-highlight-color: transparent; 
         }
 
+        /* 微信风小黑框菜单 */
         #wx-action-menu {
             display: none; 
             position: absolute; 
@@ -532,14 +580,17 @@
             cursor: pointer; 
             border-right: 1px solid #5a5a5a;
         }
+        
         .wx-action-item:last-child { 
             border-right: none; 
         }
+        
         .wx-action-item:active { 
             background: #3c3c3c; 
             border-radius: 6px; 
         }
 
+        /* 菜单下方的小箭头 */
         #wx-action-menu::after {
             content: ''; 
             position: absolute; 
@@ -550,23 +601,26 @@
             border-style: solid; 
             border-color: #4c4c4c transparent transparent transparent;
         }
+        
+        /* 菜单显示在下方时，箭头朝上 */
         #wx-action-menu.arrow-up::after {
             top: -5px; 
             bottom: auto;
             border-width: 0 5px 5px; 
             border-color: transparent transparent #4c4c4c transparent;
         }
-
     </style>
 </head>
 <body>
 
+    <!-- 伪装盖板 -->
     <div id="stealth-cover">
         <div id="secret-trigger"></div>
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
     </div>
 
+    <!-- 左侧日历栏 -->
     <div id="sidebar">
         <h3>Recents</h3>
         <div class="search-container">
@@ -574,18 +628,19 @@
         </div>
         
         <div id="vip-presence-area">
-            <h4>🕵️ </h4>
+            <h4>🕵️ 秘密探测仪</h4>
             <div id="presence-list">加载中...</div>
         </div>
 
-        <div id="date-list">
-        </div>
+        <div id="date-list"></div>
     </div>
 
+    <!-- 主界面 -->
     <div id="main-area" onclick="closeActionMenu()">
         <div id="header-container">
             <button id="toggle-btn" onclick="event.stopPropagation(); toggleSidebar();">☰</button>
-            <h2 style="cursor:pointer; user-select:none;" onclick="lockScreen()">blablaba</h2>
+            <!-- 点击此处即可一键瞬间锁屏 -->
+            <h2 onclick="lockScreen()">blablaba</h2>
         </div>
         
         <div id="announcement-container" onclick="event.stopPropagation()">
@@ -602,7 +657,9 @@
 
         <div id="history-notice"></div>
         
+        <!-- 聊天主窗口 -->
         <div id="chat-box" onscroll="closeActionMenu()">
+            <!-- 微信风长按悬浮菜单 -->
             <div id="wx-action-menu" onclick="event.stopPropagation()">
                 <div class="wx-action-item" onclick="doCopy()">复制</div>
                 <div class="wx-action-item" onclick="doReply()">引用</div>
@@ -662,7 +719,7 @@
             } 
         }
         
-        let idleThrottle = false;
+        let idleThrottle = false; 
         function throttledReset() { 
             if (idleThrottle) return; 
             idleThrottle = true; 
@@ -676,6 +733,7 @@
             document.addEventListener(evt, throttledReset, { passive: true }); 
         });
         
+        // 左上角隐形大门：快速点击3次解锁
         document.getElementById('secret-trigger').addEventListener('click', function() {
             tapCount++; 
             clearTimeout(tapTimer);
@@ -694,7 +752,8 @@
             resetIdleTimer(); 
         }
         
-document.addEventListener("visibilitychange", function() { 
+        // 网页切入后台时安全锁死
+        document.addEventListener("visibilitychange", function() { 
             if (document.hidden) lockScreen(); 
         });
 
@@ -715,6 +774,7 @@ document.addEventListener("visibilitychange", function() {
         let lastDate = ""; 
         let currentView = "live"; 
         let currentReplyTarget = null; 
+        let currentLiveDate = "";
         const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         window.onload = function() {
@@ -726,10 +786,10 @@ document.addEventListener("visibilitychange", function() {
             checkVipStatus(); 
             monitorPresence(); 
             monitorAnnouncement(); 
+            
             setTimeout(() => { 
                 loadSidebarDates(); 
             }, 500); 
-            loadLiveChat();
             
             if (!isMobileDevice) { 
                 document.getElementById('msg-input').placeholder = "按 Enter 发送，Shift+Enter 换行..."; 
@@ -742,6 +802,7 @@ document.addEventListener("visibilitychange", function() {
             document.getElementById('sidebar').classList.toggle('collapsed'); 
         }
 
+        // --- 公告板逻辑 ---
         function toggleAnnouncement(e) {
             if (e.target.tagName === 'BUTTON') return;
             const body = document.getElementById('announcement-body');
@@ -800,6 +861,7 @@ document.addEventListener("visibilitychange", function() {
             }); 
         }
 
+        // --- 秘密探测仪 ---
         function updatePresence() {
             const name = document.getElementById('user-name').value.trim();
             if (name) { 
@@ -871,31 +933,58 @@ document.addEventListener("visibilitychange", function() {
             }, 500); 
         }
 
-        // --- 核心优化：彻底分离正文与目录（永不卡死机制） ---
+        // --- 核心优化：十年版“抽屉法则”数据自动迁移与分离 ---
         function loadSidebarDates() {
-            // 1. 先尝试只下载几十 KB 大小的“日期目录”
             db.ref(ROOM_PREFIX + 'active_dates').once('value').then(snapshot => {
                 if (snapshot.exists()) {
-                    // 如果目录存在，直接瞬间生成侧边栏
                     const dates = new Set(); 
-                    snapshot.forEach(child => { 
-                        dates.add(child.val()); 
+                    snapshot.forEach(child => {
+                        dates.add(child.key);
                     });
-                    renderSidebarUI(dates);
+                    
+                    // 检查是否还有漏网的旧版本扁平消息需要搬家
+                    db.ref(ROOM_PREFIX + 'messages').limitToFirst(1).once('value', oldSnap => {
+                        if (oldSnap.exists()) {
+                            migrateOldMessages(dates);
+                        } else {
+                            renderSidebarUI(dates);
+                            loadLiveChat(); 
+                        }
+                    });
                 } else {
-                    // 2. 如果目录不存在（第一次运行这版代码），自动执行一次全量扫描，并把结果写进独立目录，以后再也不用扫了。
-                    db.ref(ROOM_PREFIX + 'messages').once('value').then(msgSnapshot => {
-                        const dates = new Set(); 
-                        msgSnapshot.forEach(child => { 
-                            if(child.val().date) {
-                                const d = child.val().date;
-                                dates.add(d); 
-                                // 顺手把扫描到的日期写进新的轻量级目录
-                                db.ref(ROOM_PREFIX + 'active_dates/' + d.replace(/[\/\.]/g, '-')).set(d);
-                            }
-                        });
-                        renderSidebarUI(dates);
+                    migrateOldMessages(new Set());
+                }
+            });
+        }
+
+        // 终极平滑迁移：把旧的“大池子”自动整理成按天分类的“日历抽屉”
+        function migrateOldMessages(datesSet) {
+            db.ref(ROOM_PREFIX + 'messages').once('value', snap => {
+                let updates = {};
+                let count = 0;
+                
+                snap.forEach(child => {
+                    let v = child.val();
+                    if (v && v.date && typeof v === 'object') {
+                        let safeDate = v.date.replace(/[\/\.]/g, '-');
+                        v.date = safeDate; 
+                        updates['daily_messages/' + safeDate + '/' + child.key] = v;
+                        updates['active_dates/' + safeDate] = safeDate;
+                        datesSet.add(safeDate);
+                        count++;
+                    }
+                });
+                
+                if (count > 0) {
+                    // 搬家完成后，彻底销毁旧的拥堵池子
+                    updates['messages'] = null; 
+                    db.ref(ROOM_PREFIX).update(updates).then(() => {
+                        renderSidebarUI(datesSet);
+                        loadLiveChat();
                     });
+                } else {
+                    renderSidebarUI(datesSet);
+                    loadLiveChat();
                 }
             });
         }
@@ -905,8 +994,6 @@ document.addEventListener("visibilitychange", function() {
             dateListDiv.innerHTML = '<div class="history-item active" id="live-chat-btn" onclick="loadLiveChat()" style="padding-left:20px;">🔴 返回最新聊天</div>';
             
             const groupedDates = {};
-            
-            // 安全且精确的按时间倒序排列（越新的日子越在上面）
             const sortedDates = Array.from(dates).sort((a, b) => {
                 return new Date(b.replace(/-/g, '/')).getTime() - new Date(a.replace(/-/g, '/')).getTime();
             });
@@ -956,7 +1043,7 @@ document.addEventListener("visibilitychange", function() {
             }
         }
 
-        // --- 长按逻辑 ---
+        // --- 微信风长按逻辑 ---
         let activeMessageForAction = null;
         let activeMsgElement = null;
 
@@ -1044,6 +1131,7 @@ document.addEventListener("visibilitychange", function() {
             document.getElementById('reply-preview').style.display = 'none';
         }
 
+        // --- 渲染聊天气泡 ---
         function renderMessage(data, msgKey) {
             const chatBox = document.getElementById('chat-box');
             
@@ -1105,7 +1193,7 @@ document.addEventListener("visibilitychange", function() {
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // --- 修复点：限定扫地机器人只在“最新聊天”工作，绝不误删历史记录 ---
+            // 完美的精确定位扫地机器人（仅限 live 模式工作，保护历史记录完整）
             if (currentView === "live") {
                 const oldElements = chatBox.querySelectorAll('.message, .date-divider');
                 if (oldElements.length > 150) { 
@@ -1118,6 +1206,7 @@ document.addEventListener("visibilitychange", function() {
             }
         }
 
+        // --- 搜索功能 ---
         function handleSearch(e) {
             if (e.key === 'Enter') {
                 const keyword = document.getElementById('search-input').value.trim(); 
@@ -1145,24 +1234,28 @@ document.addEventListener("visibilitychange", function() {
                     el.classList.remove('active');
                 });
 
-                db.ref(ROOM_PREFIX + 'messages').off();
-                db.ref(ROOM_PREFIX + 'messages').once('value', snapshot => {
+                // 搜索遍历所有抽屉
+                db.ref(ROOM_PREFIX + 'daily_messages').once('value', snapshot => {
                     let foundCount = 0;
                     
                     if (snapshot.exists()) { 
-                        snapshot.forEach(child => { 
-                            const data = child.val();
-                            
-                            if (data.text && data.text.includes(keyword)) { 
-                                const msgDiv = document.createElement('div'); 
-                                msgDiv.className = 'message search-result-card';
-                                msgDiv.innerHTML = `<div class="meta">📅 ${data.date} &nbsp;|&nbsp; 👤 ${data.name} &nbsp;|&nbsp; 🕒 ${data.time}</div><div style="margin: 8px 0; color:#333;">${data.text}</div><div style="font-size:12px; color:#1890ff; font-weight:bold;">👉 点击前往上下文定位</div>`;
-                                msgDiv.onclick = () => {
-                                    jumpToContext(data.date, child.key); 
-                                };
-                                chatBox.appendChild(msgDiv); 
-                                foundCount++; 
-                            }
+                        snapshot.forEach(daySnap => {
+                            daySnap.forEach(msgSnap => {
+                                const data = msgSnap.val();
+                                
+                                if (data.text && data.text.includes(keyword)) { 
+                                    const msgDiv = document.createElement('div'); 
+                                    msgDiv.className = 'message search-result-card';
+                                    msgDiv.innerHTML = `<div class="meta">📅 ${data.date} &nbsp;|&nbsp; 👤 ${data.name} &nbsp;|&nbsp; 🕒 ${data.time}</div><div style="margin: 8px 0; color:#333;">${data.text}</div><div style="font-size:12px; color:#1890ff; font-weight:bold;">👉 点击前往上下文定位</div>`;
+                                    
+                                    msgDiv.onclick = () => {
+                                        jumpToContext(data.date, msgSnap.key); 
+                                    };
+                                    
+                                    chatBox.appendChild(msgDiv); 
+                                    foundCount++; 
+                                }
+                            });
                         }); 
                     }
                     
@@ -1194,6 +1287,7 @@ document.addEventListener("visibilitychange", function() {
             loadHistory(dateStr, targetEl, msgKey);
         }
 
+        // --- 加载最新聊天 ---
         function loadLiveChat() {
             currentView = "live"; 
             lastDate = ""; 
@@ -1217,10 +1311,28 @@ document.addEventListener("visibilitychange", function() {
             if (liveBtn) {
                 liveBtn.classList.add('active');
             }
-
-            db.ref(ROOM_PREFIX + 'messages').off();
-            db.ref(ROOM_PREFIX + 'messages').limitToLast(50).on('child_added', snapshot => { 
-                renderMessage(snapshot.val(), snapshot.key); 
+            
+            const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
+            
+            // 永远抓取最活跃的一天作为最新聊天
+            db.ref(ROOM_PREFIX + 'active_dates').orderByKey().limitToLast(1).once('value', snap => {
+                let targetDate = todaySafe;
+                if (snap.exists()) {
+                    snap.forEach(child => {
+                        targetDate = child.key;
+                    });
+                }
+                
+                if (targetDate !== todaySafe) {
+                    db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).limitToLast(50).once('value', oldSnap => {
+                        oldSnap.forEach(child => {
+                            renderMessage(child.val(), child.key);
+                        });
+                        setupLiveListener(todaySafe);
+                    });
+                } else {
+                    setupLiveListener(targetDate);
+                }
             });
             
             if(window.innerWidth <= 600) {
@@ -1228,6 +1340,15 @@ document.addEventListener("visibilitychange", function() {
             }
         }
 
+        function setupLiveListener(dateStr) {
+            currentLiveDate = dateStr;
+            db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).off();
+            db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).on('child_added', snapshot => { 
+                renderMessage(snapshot.val(), snapshot.key); 
+            });
+        }
+
+        // --- 加载历史抽屉 ---
         function loadHistory(dateStr, element, jumpMsgKey = null) {
             currentView = "history"; 
             lastDate = ""; 
@@ -1254,8 +1375,8 @@ document.addEventListener("visibilitychange", function() {
                 element.classList.add('active');
             }
 
-            db.ref(ROOM_PREFIX + 'messages').off();
-            db.ref(ROOM_PREFIX + 'messages').orderByChild('date').equalTo(dateStr).once('value', snapshot => {
+            // 直接拉开当天的专属抽屉，瞬间秒开
+            db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).once('value', snapshot => {
                 if (snapshot.exists()) { 
                     snapshot.forEach(child => { 
                         renderMessage(child.val(), child.key); 
@@ -1274,6 +1395,7 @@ document.addEventListener("visibilitychange", function() {
             });
         }
 
+        // --- 发送消息（带有防爆库安全门） ---
         function sendMessage() {
             const name = document.getElementById('user-name').value.trim(); 
             const text = document.getElementById('msg-input').value.trim();
@@ -1283,16 +1405,23 @@ document.addEventListener("visibilitychange", function() {
                 return; 
             }
 
+            // 🚫 拦截 Base64 超长图片乱码，防止撑爆数据库免费容量
+            if (text.includes("data:image/") && text.length > 500) {
+                alert("⚠️ 警告：请不要直接粘贴图片！\n\n为了节省宝贵的数据库空间，请先将图片上传到外部免费图床（如 Postimages），然后再把直接链接粘贴过来。");
+                document.getElementById('msg-input').value = ""; 
+                return; 
+            }
+
             localStorage.setItem('chat_username', name); 
             updatePresence(); 
             
             const now = new Date(); 
-            const dateStr = now.toLocaleDateString();
+            const safeDate = now.toLocaleDateString().replace(/[\/\.]/g, '-');
             
             const payload = { 
                 name: name, 
                 text: text, 
-                date: dateStr, 
+                date: safeDate, 
                 time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
             };
             
@@ -1300,11 +1429,17 @@ document.addEventListener("visibilitychange", function() {
                 payload.reply = currentReplyTarget;
             }
 
-            db.ref(ROOM_PREFIX + 'messages').push(payload).then(() => { 
+            // 如果你们熬夜跨过了晚上12点，系统自动切换监听新的抽屉
+            if (currentView === "live" && currentLiveDate !== safeDate) {
+                db.ref(ROOM_PREFIX + 'daily_messages/' + currentLiveDate).off();
+                setupLiveListener(safeDate);
+            }
+
+            db.ref(ROOM_PREFIX + 'daily_messages/' + safeDate).push(payload).then(() => { 
                 cancelReply(); 
                 
-                // 每次发消息时，顺手把今天的日期记到独立目录里
-                db.ref(ROOM_PREFIX + 'active_dates/' + dateStr.replace(/[\/\.]/g, '-')).set(dateStr);
+                // 确保活跃目录表里有今天
+                db.ref(ROOM_PREFIX + 'active_dates/' + safeDate).set(safeDate);
                 
                 if (currentView !== "live") {
                     loadLiveChat(); 
@@ -1333,5 +1468,3 @@ document.addEventListener("visibilitychange", function() {
     </script>
 </body>
 </html>
-
-
