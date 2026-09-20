@@ -694,24 +694,8 @@
             resetIdleTimer(); 
         }
         
-       // 1. 网页完全进入后台
-        document.addEventListener("visibilitychange", function() { 
+document.addEventListener("visibilitychange", function() { 
             if (document.hidden) lockScreen(); 
-        });
-        
-        // 2. 网页失去焦点（如下拉通知栏）
-        window.addEventListener("blur", function() {
-            lockScreen();
-        });
-
-        // 3. 终极杀招：手指触摸被系统强行打断（极大概率是正在上划呼出多任务）
-        document.addEventListener("touchcancel", function() {
-            lockScreen();
-        });
-
-        // 4. 网页被系统挂起即将休眠
-        window.addEventListener("pagehide", function() {
-            lockScreen();
         });
 
         // --- Firebase 配置 ---
