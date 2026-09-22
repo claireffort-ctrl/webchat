@@ -1196,9 +1196,13 @@
         function doReply() { 
             if (!activeMessageForAction) return; 
             
+            // 1. 在关闭菜单前，先把所有需要的数据安全地提取出来
             const targetName = activeMessageForAction.name; 
             const safeText = activeMessageForAction.text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' '); 
+            const targetMsgKey = activeMessageForAction.msgKey;
+            const targetDate = activeMessageForAction.date;
             
+            // 2. 现在可以安全地关闭菜单了
             closeActionMenu(); 
             
             // 如果是在历史记录里引用，强制拉回 Live 最新页准备发送
@@ -1206,16 +1210,8 @@
                 loadLiveChat(); 
             }
             
-            initiateReply(targetName, safeText, activeMessageForAction.msgKey, activeMessageForAction.date); 
-        }
-        
-        function initiateReply(name, text, msgKey, date) { 
-            currentReplyTarget = { 
-                name: name, 
-                text: text, 
-                msgKey: msgKey, 
-                date: date 
-            }; 
+            initiateReply(targetName, safeText, targetMsgKey, targetDate); 
+        } 
             
             document.getElementById('reply-preview').style.display = 'block'; 
             document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`; 
