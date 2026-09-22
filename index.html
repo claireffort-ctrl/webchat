@@ -642,7 +642,8 @@
     </div>
     
     <!-- 左侧菜单栏 -->
-    <div id="sidebar">
+     <div id="sidebar">
+        <script>if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');</script>
         <h3>Recents</h3>
         <div class="search-container">
             <input type="text" id="search-input" placeholder="🔍 搜索并回车..." onkeypress="handleSearch(event)">
@@ -1424,57 +1425,43 @@
         // ==========================================
         
         // 加载最新聊天（永远保持在 Live 状态）
-        function loadLiveChat() {
-            currentView = "live"; 
-            lastDate = ""; 
-            closeActionMenu();
-            
+ function loadLiveChat() {
+            currentView = "live"; lastDate = ""; closeActionMenu();
             const chatBox = document.getElementById('chat-box'); 
-            Array.from(chatBox.children).forEach(child => { 
-                if(child.id !== 'wx-action-menu') {
-                    child.remove(); 
-                }
-            });
-            
-            document.getElementById('search-input').value = ""; 
-            document.getElementById('history-notice').style.display = 'none'; 
-            
-            document.querySelectorAll('.history-item').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            const liveBtn = document.getElementById('live-chat-btn'); 
-            if (liveBtn) {
-                liveBtn.classList.add('active');
-            }
+            Array.from(chatBox.children).forEach(child => { if(child.id !== 'wx-action-menu') child.remove(); });
+            document.getElementById('search-input').value = ""; document.getElementById('history-notice').style.display = 'none'; document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+            const liveBtn = document.getElementById('live-chat-btn'); if (liveBtn) liveBtn.classList.add('active');
             
             const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
             
-            // 永远抓取最活跃的一天作为最新聊天
-            db.ref(ROOM_PREFIX + 'active_dates').orderByKey().limitToLast(1).once('value', snap => {
+            db.ref(ROOM_PREFIX + 'active_dates').once('value', snap => {
                 let targetDate = todaySafe;
                 let originalDate = new Date().toLocaleDateString();
+                let maxTime = 0;
                 
                 if (snap.exists()) {
                     snap.forEach(child => {
-                        targetDate = child.key;
-                        originalDate = child.val();
+                        let dTime = new Date(child.key.replace(/-/g, '/')).getTime();
+                        if (dTime > maxTime) {
+                            maxTime = dTime;
+                            targetDate = child.key;
+                            originalDate = child.val();
+                        }
                     });
                 }
                 
                 if (targetDate !== todaySafe) {
-                    // 先去新抽屉拿最新的
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).limitToLast(50).once('value', dSnap => {
                         if (dSnap.exists()) {
-                            dSnap.forEach(child => {
-                                renderMessage(child.val(), child.key);
-                            });
+                            chatBox.style.opacity = '0';
+                            dSnap.forEach(child => renderMessage(child.val(), child.key));
+                            setTimeout(() => { chatBox.style.opacity = '1'; }, 50);
                             setupLiveListener(todaySafe);
                         } else {
-                            // 新抽屉没东西？去旧池子里拿，顺便把旧池子那一天的记录安全迁移走
                             db.ref(ROOM_PREFIX + 'messages').orderByChild('date').equalTo(originalDate).limitToLast(50).once('value', oSnap => {
                                 if (oSnap.exists()) {
                                     let updates = {};
+                                    chatBox.style.opacity = '0';
                                     oSnap.forEach(child => {
                                         let v = child.val();
                                         v.date = targetDate;
@@ -1483,6 +1470,7 @@
                                         renderMessage(v, child.key);
                                     });
                                     db.ref(ROOM_PREFIX).update(updates);
+                                    setTimeout(() => { chatBox.style.opacity = '1'; }, 50);
                                 }
                                 setupLiveListener(todaySafe);
                             });
@@ -1493,17 +1481,33 @@
                 }
             });
             
-            if(window.innerWidth <= 600) {
-                document.getElementById('sidebar').classList.add('collapsed');
-            }
+            if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');
+        }
         }
 
         // 挂载对特定日期抽屉的实时监听
-        function setupLiveListener(dateStr) {
+       function setupLiveListener(dateStr) {
             currentLiveDate = dateStr;
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).off();
-            db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).on('child_added', snapshot => { 
-                renderMessage(snapshot.val(), snapshot.key); 
+            
+            db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).once('value', snapshot => {
+                const chatBox = document.getElementById('chat-box');
+                chatBox.style.opacity = '0'; 
+                let loadedKeys = {};
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        renderMessage(child.val(), child.key);
+                        loadedKeys[child.key] = true; 
+                    });
+                }
+                setTimeout(() => { chatBox.style.opacity = '1'; }, 50); 
+                
+                db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).on('child_added', childSnap => { 
+                    if (!loadedKeys[childSnap.key]) {
+                        renderMessage(childSnap.val(), childSnap.key); 
+                    }
+                });
             });
         }
 
