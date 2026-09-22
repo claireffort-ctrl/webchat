@@ -1211,8 +1211,10 @@
             }
             
             initiateReply(targetName, safeText, targetMsgKey, targetDate); 
-        } 
-            
+        }
+        
+        function initiateReply(name, text, msgKey, date) { 
+            currentReplyTarget = { name: name, text: text, msgKey: msgKey, date: date }; 
             document.getElementById('reply-preview').style.display = 'block'; 
             document.getElementById('reply-text-preview').innerText = `回复 ${name}: ${text}`; 
             document.getElementById('msg-input').focus(); 
