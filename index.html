@@ -642,7 +642,8 @@
     </div>
     
     <!-- 左侧菜单栏 -->
-     <div id="sidebar">
+    <div id="sidebar">
+        <!-- 页面加载时自动在手机端藏好，彻底消灭闪烁 -->
         <script>if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');</script>
         <h3>Recents</h3>
         <div class="search-container">
@@ -1425,15 +1426,33 @@
         // ==========================================
         
         // 加载最新聊天（永远保持在 Live 状态）
- function loadLiveChat() {
-            currentView = "live"; lastDate = ""; closeActionMenu();
+        function loadLiveChat() {
+            currentView = "live"; 
+            lastDate = ""; 
+            closeActionMenu();
+            
             const chatBox = document.getElementById('chat-box'); 
-            Array.from(chatBox.children).forEach(child => { if(child.id !== 'wx-action-menu') child.remove(); });
-            document.getElementById('search-input').value = ""; document.getElementById('history-notice').style.display = 'none'; document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-            const liveBtn = document.getElementById('live-chat-btn'); if (liveBtn) liveBtn.classList.add('active');
+            Array.from(chatBox.children).forEach(child => { 
+                if(child.id !== 'wx-action-menu') {
+                    child.remove(); 
+                }
+            });
+            
+            document.getElementById('search-input').value = ""; 
+            document.getElementById('history-notice').style.display = 'none'; 
+            
+            document.querySelectorAll('.history-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            const liveBtn = document.getElementById('live-chat-btn'); 
+            if (liveBtn) {
+                liveBtn.classList.add('active');
+            }
             
             const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
             
+            // 修复：不再依赖数据库的不稳定排序，直接用时间戳精准找出真正的“最新一天”
             db.ref(ROOM_PREFIX + 'active_dates').once('value', snap => {
                 let targetDate = todaySafe;
                 let originalDate = new Date().toLocaleDateString();
@@ -1481,15 +1500,17 @@
                 }
             });
             
-            if(window.innerWidth <= 600) document.getElementById('sidebar').classList.add('collapsed');
-        }
+            if(window.innerWidth <= 600) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
         }
 
         // 挂载对特定日期抽屉的实时监听
-       function setupLiveListener(dateStr) {
+        function setupLiveListener(dateStr) {
             currentLiveDate = dateStr;
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).off();
             
+            // 终极优化：先一口气拿全数据并屏蔽动画，排好版后再开启监听，彻底告别滚动眩晕
             db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).once('value', snapshot => {
                 const chatBox = document.getElementById('chat-box');
                 chatBox.style.opacity = '0'; 
@@ -1503,6 +1524,7 @@
                 }
                 setTimeout(() => { chatBox.style.opacity = '1'; }, 50); 
                 
+                // 然后再挂载只等“新消息”的监听器
                 db.ref(ROOM_PREFIX + 'daily_messages/' + dateStr).limitToLast(50).on('child_added', childSnap => { 
                     if (!loadedKeys[childSnap.key]) {
                         renderMessage(childSnap.val(), childSnap.key); 
