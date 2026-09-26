@@ -179,7 +179,6 @@
             color: #1890ff; 
         }
         
-        /* 标题：一键锁屏开关 */
         h2 { 
             margin: 0; 
             color: #333; 
@@ -289,7 +288,7 @@
             clear: both; 
         }
         
-        /* 聊天区域 (已去除了电梯眩晕的 smooth scroll) */
+        /* 聊天区域 (已去除了电梯眩晕的 smooth scroll，加入幕布排版属性) */
         #chat-box { 
             width: 100%; 
             max-width: 600px; 
@@ -303,6 +302,7 @@
             gap: 12px; 
             box-sizing: border-box; 
             position: relative;
+            transition: opacity 0.05s ease-in-out;
         }
         
         .message { 
@@ -330,7 +330,7 @@
             white-space: normal; 
         }
         
-        /* 引用框 (带跳转交互) */
+        /* 引用框 */
         .quote-block { 
             font-size: 12px; 
             color: #666; 
@@ -630,6 +630,47 @@
             border-width: 0 5px 5px; 
             border-color: transparent transparent #4c4c4c transparent; 
         }
+
+        /* --- 夜间模式专属样式 --- */
+        body.dark-theme { background-color: #121212; color: #e0e0e0; }
+        body.dark-theme #sidebar { background-color: #1e1e1e; border-right-color: #333; }
+        body.dark-theme #sidebar h3, body.dark-theme .month-header { color: #aaa; background-color: #1e1e1e; border-bottom-color: #333; }
+        body.dark-theme .month-header:hover { background-color: #2a2a2a; }
+        body.dark-theme .history-item { border-bottom-color: #333; color: #ccc; }
+        body.dark-theme .history-item:hover { background-color: #2a2a2a; }
+        body.dark-theme .history-item.active { background-color: #1f2a33; color: #40a9ff; border-left-color: #40a9ff; }
+        body.dark-theme .search-container { border-bottom-color: #333; }
+        body.dark-theme .search-container input { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
+        body.dark-theme .search-container input:focus { border-color: #1890ff; background: #222; }
+        body.dark-theme #vip-presence-area { background-color: #2a1f1f; border-bottom-color: #333; }
+        body.dark-theme h2 { color: #e0e0e0; }
+        body.dark-theme #toggle-btn { color: #aaa; }
+        body.dark-theme #announcement-container { background: #1e1e1e; border-color: #333; color: #ccc; box-shadow: none; }
+        body.dark-theme .announcement-header:hover { background-color: #2a2a2a; }
+        body.dark-theme .announcement-header.open { border-bottom-color: #333; }
+        body.dark-theme #announcement-content { color: #ccc; }
+        body.dark-theme #announcement-edit-area { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
+        body.dark-theme #chat-box { background: #121212; }
+        body.dark-theme .message.other { background: #1e1e1e; color: #e0e0e0; box-shadow: none; }
+        body.dark-theme .message.mine { background: #173724; color: #e0e0e0; box-shadow: none; }
+        body.dark-theme .meta { color: #888; }
+        body.dark-theme .quote-block { background: rgba(255,255,255,0.05); border-left-color: #555; color: #aaa; }
+        body.dark-theme .quote-block[onclick]:hover { background: rgba(255,255,255,0.1); }
+        body.dark-theme .message.mine .quote-block { background: rgba(0,0,0,0.2); border-right-color: #2e8b57; color: #aaa; }
+        body.dark-theme .message.mine .quote-block[onclick]:hover { background: rgba(0,0,0,0.3); }
+        body.dark-theme .date-divider { color: #666; }
+        body.dark-theme .search-result-card { background: #1e1e1e; border-color: #1890ff; color: #e0e0e0; }
+        body.dark-theme .search-result-card div[style*="color:#333"] { color: #ccc !important; }
+        body.dark-theme #reply-preview { background: #1f2a33; border-left-color: #40a9ff; color: #ccc; box-shadow: none; }
+        body.dark-theme #input-area { background: #1e1e1e; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
+        body.dark-theme #user-name, body.dark-theme #msg-input { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
+        body.dark-theme #user-name:focus, body.dark-theme #msg-input:focus { border-color: #1890ff; background: #222; }
+        body.dark-theme #stealth-cover { background-color: #121212; color: #e0e0e0; }
+        
+        /* 顶部月亮/太阳按钮基础样式 */
+        #theme-toggle-btn { position: absolute; right: 0; background: none; border: none; font-size: 20px; cursor: pointer; color: #666; padding: 5px; transition: 0.2s; }
+        #theme-toggle-btn:hover { color: #1890ff; }
+        body.dark-theme #theme-toggle-btn { color: #aaa; }
     </style>
 </head>
 <body>
@@ -665,6 +706,8 @@
         <div id="header-container">
             <button id="toggle-btn" onclick="event.stopPropagation(); toggleSidebar();">☰</button>
             <h2 onclick="lockScreen()">blablaba</h2>
+            <!-- 夜间模式切换按钮 -->
+            <button id="theme-toggle-btn" onclick="event.stopPropagation(); toggleTheme();" title="切换夜间模式">🌙</button>
         </div>
         
         <!-- 公告板 -->
@@ -707,6 +750,11 @@
     </div>
 
     <script>
+        // ==========================================
+        // 0. 瞬间读取夜间主题防闪烁
+        // ==========================================
+        if (localStorage.getItem('dark_theme') === 'true') document.body.classList.add('dark-theme');
+
         // ==========================================
         // 1. 系统防御与锁屏逻辑
         // ==========================================
@@ -839,6 +887,11 @@
             monitorPresence(); 
             monitorAnnouncement(); 
             
+            // 初始化夜间模式按钮图标
+            if (localStorage.getItem('dark_theme') === 'true') {
+                document.getElementById('theme-toggle-btn').innerText = '☀️';
+            }
+            
             // 延迟 0.5 秒拉取历史目录，防止堵塞渲染
             setTimeout(() => { 
                 loadSidebarDates(); 
@@ -851,6 +904,13 @@
                 document.getElementById('msg-input').placeholder = "输入你想说的话..."; 
             }
         };
+
+        // 夜间模式核心切换逻辑
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            document.getElementById('theme-toggle-btn').innerText = isDark ? '☀️' : '🌙';
+            localStorage.setItem('dark_theme', isDark ? 'true' : 'false');
+        }
 
         // 切换侧边栏展开/收起
         function toggleSidebar() { 
@@ -1122,7 +1182,7 @@
         }
 
         // ==========================================
-        // 6. 长按菜单与引用动作
+        // 6. 长按菜单与引用动作 (已修复关闭菜单导致数据丢失的Bug)
         // ==========================================
         let activeMessageForAction = null; 
         let activeMsgElement = null;
@@ -1470,6 +1530,7 @@
                 if (targetDate !== todaySafe) {
                     db.ref(ROOM_PREFIX + 'daily_messages/' + targetDate).limitToLast(50).once('value', dSnap => {
                         if (dSnap.exists()) {
+                            // 幕后排版防眩晕
                             chatBox.style.opacity = '0';
                             dSnap.forEach(child => renderMessage(child.val(), child.key));
                             setTimeout(() => { chatBox.style.opacity = '1'; }, 50);
