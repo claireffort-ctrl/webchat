@@ -288,7 +288,7 @@
             clear: both; 
         }
         
-        /* 聊天区域 (已去除了电梯眩晕的 smooth scroll，加入幕布排版属性) */
+        /* 聊天区域 */
         #chat-box { 
             width: 100%; 
             max-width: 600px; 
@@ -792,6 +792,10 @@
         function lockScreen() { 
             document.getElementById('stealth-cover').style.display = 'flex'; 
             sessionStorage.removeItem('unlocked'); 
+            
+            // 【重要】锁屏时，同时清空历史记录的免密缓存！下次看历史必须重输 0831
+            sessionStorage.removeItem('history_pwd_unlocked'); 
+            
             tapCount = 0; 
         }
         
@@ -847,6 +851,26 @@
                 lockScreen(); 
             }
         });
+
+        // ==========================================
+        // 1.5 专属功能：历史记录密码锁
+        // ==========================================
+        function checkHistoryPassword(callback) {
+            // 如果这个会话已经验证过，直接放行
+            if (sessionStorage.getItem('history_pwd_unlocked') === 'true') {
+                callback();
+            } else {
+                // 如果没验证过，弹出密码框
+                const pwd = prompt("🔒 访问安全历史档案，请输入密码：");
+                if (pwd === "0831") {
+                    // 密码正确，缓存免打扰状态
+                    sessionStorage.setItem('history_pwd_unlocked', 'true');
+                    callback();
+                } else if (pwd !== null) {
+                    alert("❌ 密码错误！");
+                }
+            }
+        }
 
         // ==========================================
         // 2. Firebase 初始化与环境设置
@@ -1169,11 +1193,13 @@
                     div.dataset.date = item.safeDate; 
                     
                     div.onclick = () => { 
-                        // 点击某一天时，启动“历史记录拉取”
-                        loadHistory(item.safeDate, item.originalDate, div); 
-                        if (window.innerWidth <= 600) {
-                            toggleSidebar(); 
-                        }
+                        // 【密码锁生效处 1】点击历史日期需要输密码 0831
+                        checkHistoryPassword(() => {
+                            loadHistory(item.safeDate, item.originalDate, div); 
+                            if (window.innerWidth <= 600) {
+                                toggleSidebar(); 
+                            }
+                        });
                     }; 
                     
                     content.appendChild(div);
@@ -1182,7 +1208,7 @@
         }
 
         // ==========================================
-        // 6. 长按菜单与引用动作 (已修复关闭菜单导致数据丢失的Bug)
+        // 6. 长按菜单与引用动作 
         // ==========================================
         let activeMessageForAction = null; 
         let activeMsgElement = null;
@@ -1385,63 +1411,66 @@
                     return; 
                 }
                 
-                currentView = "search"; 
-                lastDate = ""; 
-                const chatBox = document.getElementById('chat-box'); 
-                
-                // 清空当前屏幕
-                Array.from(chatBox.children).forEach(child => { 
-                    if(child.id !== 'wx-action-menu') {
-                        child.remove(); 
-                    }
-                });
-                
-                const notice = document.getElementById('history-notice'); 
-                notice.innerText = `「搜索模式」: ${keyword}。在此处发送新消息，将自动带您回到最新聊天。`; 
-                notice.style.display = 'block'; 
-                
-                // 移除侧边栏的高亮
-                document.querySelectorAll('.history-item').forEach(el => {
-                    el.classList.remove('active');
-                });
-                
-                let foundCount = 0;
-                
-                // 1. 搜新版抽屉
-                db.ref(ROOM_PREFIX + 'daily_messages').once('value', snapshot => {
-                    if (snapshot.exists()) { 
-                        snapshot.forEach(daySnap => {
-                            daySnap.forEach(msgSnap => {
-                                const data = msgSnap.val();
-                                if (data.text && data.text.includes(keyword)) { 
-                                    appendSearchResult(data, msgSnap.key, chatBox);
-                                    foundCount++; 
-                                }
-                            });
-                        }); 
-                    }
+                // 【密码锁生效处 2】使用全局搜索看历史消息，必须输密码 0831
+                checkHistoryPassword(() => {
+                    currentView = "search"; 
+                    lastDate = ""; 
+                    const chatBox = document.getElementById('chat-box'); 
                     
-                    // 2. 搜旧池子（双保险，防止旧记录搜不到）
-                    db.ref(ROOM_PREFIX + 'messages').once('value', oldSnap => {
-                        if (oldSnap.exists()) {
-                            oldSnap.forEach(child => {
-                                const data = child.val();
-                                if (data.text && data.text.includes(keyword)) {
-                                    appendSearchResult(data, child.key, chatBox);
-                                    foundCount++;
-                                }
-                            });
-                        }
-                        
-                        if (foundCount === 0) {
-                            chatBox.insertAdjacentHTML('beforeend', `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`);
+                    // 清空当前屏幕
+                    Array.from(chatBox.children).forEach(child => { 
+                        if(child.id !== 'wx-action-menu') {
+                            child.remove(); 
                         }
                     });
-                });
-                
-                if(window.innerWidth <= 600) {
-                    toggleSidebar();
-                }
+                    
+                    const notice = document.getElementById('history-notice'); 
+                    notice.innerText = `「搜索模式」: ${keyword}。在此处发送新消息，将自动带您回到最新聊天。`; 
+                    notice.style.display = 'block'; 
+                    
+                    // 移除侧边栏的高亮
+                    document.querySelectorAll('.history-item').forEach(el => {
+                        el.classList.remove('active');
+                    });
+                    
+                    let foundCount = 0;
+                    
+                    // 1. 搜新版抽屉
+                    db.ref(ROOM_PREFIX + 'daily_messages').once('value', snapshot => {
+                        if (snapshot.exists()) { 
+                            snapshot.forEach(daySnap => {
+                                daySnap.forEach(msgSnap => {
+                                    const data = msgSnap.val();
+                                    if (data.text && data.text.includes(keyword)) { 
+                                        appendSearchResult(data, msgSnap.key, chatBox);
+                                        foundCount++; 
+                                    }
+                                });
+                            }); 
+                        }
+                        
+                        // 2. 搜旧池子（双保险，防止旧记录搜不到）
+                        db.ref(ROOM_PREFIX + 'messages').once('value', oldSnap => {
+                            if (oldSnap.exists()) {
+                                oldSnap.forEach(child => {
+                                    const data = child.val();
+                                    if (data.text && data.text.includes(keyword)) {
+                                        appendSearchResult(data, child.key, chatBox);
+                                        foundCount++;
+                                    }
+                                });
+                            }
+                            
+                            if (foundCount === 0) {
+                                chatBox.insertAdjacentHTML('beforeend', `<div style="text-align:center; color:#888; margin-top:30px;">没有找到关于 "${keyword}" 的记录哦~</div>`);
+                            }
+                        });
+                    });
+                    
+                    if(window.innerWidth <= 600) {
+                        toggleSidebar();
+                    }
+                }); // 密码校验结尾
             }
         }
 
@@ -1461,22 +1490,25 @@
 
         // 通过日期和 msgKey 跳入特定历史现场
         function jumpToContext(dateStr, msgKey) { 
-            let targetEl = null; 
-            
-            // 同步展开侧边栏里对应的月份并高亮
-            document.querySelectorAll('.history-item').forEach(el => { 
-                if (el.dataset.date === dateStr) { 
-                    targetEl = el; 
-                    const parentContent = el.closest('.month-content'); 
-                    if (parentContent && !parentContent.classList.contains('open')) { 
-                        parentContent.classList.add('open'); 
-                        parentContent.previousElementSibling.querySelector('.icon').innerText = '▼'; 
+            // 【密码锁生效处 3】点击引用框时光穿梭，需要密码 0831
+            checkHistoryPassword(() => {
+                let targetEl = null; 
+                
+                // 同步展开侧边栏里对应的月份并高亮
+                document.querySelectorAll('.history-item').forEach(el => { 
+                    if (el.dataset.date === dateStr) { 
+                        targetEl = el; 
+                        const parentContent = el.closest('.month-content'); 
+                        if (parentContent && !parentContent.classList.contains('open')) { 
+                            parentContent.classList.add('open'); 
+                            parentContent.previousElementSibling.querySelector('.icon').innerText = '▼'; 
+                        } 
                     } 
-                } 
-            }); 
-            
-            // 跳转拉取
-            loadHistory(dateStr, null, targetEl, msgKey); 
+                }); 
+                
+                // 跳转拉取
+                loadHistory(dateStr, null, targetEl, msgKey); 
+            });
         }
 
         // ==========================================
@@ -1510,7 +1542,7 @@
             
             const todaySafe = new Date().toLocaleDateString().replace(/[\/\.]/g, '-');
             
-            // 修复：不再依赖数据库的不稳定排序，直接用时间戳精准找出真正的“最新一天”
+            // 不依赖数据库排序，直接用时间戳精准找出真正的“最新一天”
             db.ref(ROOM_PREFIX + 'active_dates').once('value', snap => {
                 let targetDate = todaySafe;
                 let originalDate = new Date().toLocaleDateString();
