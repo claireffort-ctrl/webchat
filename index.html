@@ -672,36 +672,48 @@
         #theme-toggle-btn:hover { color: #1890ff; }
         body.dark-theme #theme-toggle-btn { color: #aaa; }
 
-        /* ==================== 极简密码层专属样式 ==================== */
+        /* ==================== 极简弹窗小卡片专属样式 ==================== */
         #pwd-overlay { 
             display: none; 
             position: fixed; 
             top: 0; left: 0; 
             width: 100vw; height: 100vh; 
-            background-color: rgba(255, 255, 255, 0.95); 
+            background-color: rgba(0, 0, 0, 0.3); /* 仅稍微变暗，不完全遮挡屏幕 */
             z-index: 10005; 
             justify-content: center; 
             align-items: center; 
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px); 
+        }
+        #pwd-box {
+            background: #ffffff;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn { 
+            0% { transform: scale(0.9); opacity: 0; } 
+            100% { transform: scale(1); opacity: 1; } 
         }
         #pwd-input { 
             border: none; 
-            border-bottom: 2px solid #ddd; 
+            border-bottom: 2px solid #eee; 
             background: transparent; 
-            font-size: 20px; 
+            font-size: 16px; 
             outline: none; 
             text-align: center; 
-            padding: 10px; 
-            width: 180px; 
+            padding: 8px; 
+            width: 150px; 
             color: #333; 
             font-family: monospace; 
-            letter-spacing: 4px; 
+            letter-spacing: 2px; 
             transition: 0.3s;
         }
-        #pwd-input::placeholder { color: #bbb; letter-spacing: 1px; font-size: 16px; font-family: sans-serif; }
+        #pwd-input::placeholder { color: #ccc; letter-spacing: 1px; font-family: sans-serif; }
         #pwd-input:focus { border-bottom-color: #1890ff; }
-        body.dark-theme #pwd-overlay { background-color: rgba(18, 18, 18, 0.95); }
+        
+        /* 夜间模式的弹窗适配 */
+        body.dark-theme #pwd-overlay { background-color: rgba(0, 0, 0, 0.6); }
+        body.dark-theme #pwd-box { background: #2a2a2a; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         body.dark-theme #pwd-input { border-bottom-color: #444; color: #e0e0e0; }
         body.dark-theme #pwd-input:focus { border-bottom-color: #1890ff; }
         
@@ -719,9 +731,11 @@
         <p>The requested URL was not found on this server.</p>
     </div>
 
-    <!-- 极简毛玻璃密码层 -->
+    <!-- 极简弹窗小卡片密码层 -->
     <div id="pwd-overlay" onclick="closePwdOverlay()">
-        <input type="password" id="pwd-input" placeholder="password" autocomplete="off" onclick="event.stopPropagation()" onkeydown="handlePwdEnter(event)">
+        <div id="pwd-box" onclick="event.stopPropagation()">
+            <input type="password" id="pwd-input" placeholder="password" autocomplete="off" onkeydown="handlePwdEnter(event)">
+        </div>
     </div>
     
     <!-- 左侧菜单栏 -->
@@ -895,7 +909,7 @@
         });
 
         // ==========================================
-        // 1.5 专属功能：极简毛玻璃密码锁
+        // 1.5 专属功能：极简小卡片密码锁
         // ==========================================
         let pendingPwdCallback = null;
 
@@ -910,7 +924,7 @@
                 const input = document.getElementById('pwd-input');
                 overlay.style.display = 'flex';
                 input.value = '';
-                // 延迟一下确保能自动对焦弹出软键盘
+                // 延迟对焦
                 setTimeout(() => input.focus(), 100);
             }
         }
