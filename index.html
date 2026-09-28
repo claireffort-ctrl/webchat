@@ -671,6 +671,43 @@
         #theme-toggle-btn { position: absolute; right: 0; background: none; border: none; font-size: 20px; cursor: pointer; color: #666; padding: 5px; transition: 0.2s; }
         #theme-toggle-btn:hover { color: #1890ff; }
         body.dark-theme #theme-toggle-btn { color: #aaa; }
+
+        /* ==================== 极简密码层专属样式 ==================== */
+        #pwd-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh; 
+            background-color: rgba(255, 255, 255, 0.95); 
+            z-index: 10005; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px); 
+        }
+        #pwd-input { 
+            border: none; 
+            border-bottom: 2px solid #ddd; 
+            background: transparent; 
+            font-size: 20px; 
+            outline: none; 
+            text-align: center; 
+            padding: 10px; 
+            width: 180px; 
+            color: #333; 
+            font-family: monospace; 
+            letter-spacing: 4px; 
+            transition: 0.3s;
+        }
+        #pwd-input::placeholder { color: #bbb; letter-spacing: 1px; font-size: 16px; font-family: sans-serif; }
+        #pwd-input:focus { border-bottom-color: #1890ff; }
+        body.dark-theme #pwd-overlay { background-color: rgba(18, 18, 18, 0.95); }
+        body.dark-theme #pwd-input { border-bottom-color: #444; color: #e0e0e0; }
+        body.dark-theme #pwd-input:focus { border-bottom-color: #1890ff; }
+        
+        /* 输错密码时的震动动画 */
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+        .error-shake { animation: shake 0.3s ease-in-out; border-bottom-color: #ff4d4f !important; }
     </style>
 </head>
 <body>
@@ -680,6 +717,11 @@
         <div id="secret-trigger"></div>
         <h1>404 Not Found</h1>
         <p>The requested URL was not found on this server.</p>
+    </div>
+
+    <!-- 极简毛玻璃密码层 -->
+    <div id="pwd-overlay" onclick="closePwdOverlay()">
+        <input type="password" id="pwd-input" placeholder="password" autocomplete="off" onclick="event.stopPropagation()" onkeydown="handlePwdEnter(event)">
     </div>
     
     <!-- 左侧菜单栏 -->
@@ -853,21 +895,48 @@
         });
 
         // ==========================================
-        // 1.5 专属功能：历史记录密码锁
+        // 1.5 专属功能：极简毛玻璃密码锁
         // ==========================================
+        let pendingPwdCallback = null;
+
         function checkHistoryPassword(callback) {
-            // 如果这个会话已经验证过，直接放行
+            // 如果验证过，直接放行
             if (sessionStorage.getItem('history_pwd_unlocked') === 'true') {
                 callback();
             } else {
-                // 如果没验证过，弹出密码框
-                const pwd = prompt("🔒 访问安全历史档案，请输入密码：");
-                if (pwd === "0831") {
-                    // 密码正确，缓存免打扰状态
+                // 没验证过，呼出极简密码层
+                pendingPwdCallback = callback;
+                const overlay = document.getElementById('pwd-overlay');
+                const input = document.getElementById('pwd-input');
+                overlay.style.display = 'flex';
+                input.value = '';
+                // 延迟一下确保能自动对焦弹出软键盘
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        function closePwdOverlay() {
+            document.getElementById('pwd-overlay').style.display = 'none';
+            pendingPwdCallback = null;
+        }
+
+        // 监听密码层回车事件
+        function handlePwdEnter(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('pwd-input');
+                const val = input.value;
+                if (val === '0831') {
+                    // 密码正确，缓存免打扰状态并执行动作
                     sessionStorage.setItem('history_pwd_unlocked', 'true');
-                    callback();
-                } else if (pwd !== null) {
-                    alert("❌ 密码错误！");
+                    closePwdOverlay();
+                    if (pendingPwdCallback) pendingPwdCallback();
+                } else {
+                    // 密码错误，清空并震动
+                    input.value = '';
+                    input.classList.add('error-shake');
+                    setTimeout(() => {
+                        input.classList.remove('error-shake');
+                    }, 300);
                 }
             }
         }
@@ -1193,7 +1262,7 @@
                     div.dataset.date = item.safeDate; 
                     
                     div.onclick = () => { 
-                        // 【密码锁生效处 1】点击历史日期需要输密码 0831
+                        // 【密码锁生效处 1】点击历史日期需要极简密码层
                         checkHistoryPassword(() => {
                             loadHistory(item.safeDate, item.originalDate, div); 
                             if (window.innerWidth <= 600) {
@@ -1411,7 +1480,7 @@
                     return; 
                 }
                 
-                // 【密码锁生效处 2】使用全局搜索看历史消息，必须输密码 0831
+                // 【密码锁生效处 2】使用全局搜索看历史消息，也需要密码验证
                 checkHistoryPassword(() => {
                     currentView = "search"; 
                     lastDate = ""; 
@@ -1490,7 +1559,7 @@
 
         // 通过日期和 msgKey 跳入特定历史现场
         function jumpToContext(dateStr, msgKey) { 
-            // 【密码锁生效处 3】点击引用框时光穿梭，需要密码 0831
+            // 【密码锁生效处 3】点击引用框时光穿梭，需要验证
             checkHistoryPassword(() => {
                 let targetEl = null; 
                 
